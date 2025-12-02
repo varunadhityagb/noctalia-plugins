@@ -1,0 +1,200 @@
+import QtQuick
+import QtQuick.Layouts
+import qs.Commons
+import qs.Widgets
+
+// Panel Component
+Item {
+  id: root
+
+  // Plugin API (injected by PluginPanelSlot)
+  property var pluginApi: null
+
+  // SmartPanel
+  readonly property var geometryPlaceholder: panelContainer
+  readonly property bool allowAttach: true
+
+  property real contentPreferredWidth: 680 * Style.uiScaleRatio
+  property real contentPreferredHeight: 540 * Style.uiScaleRatio
+
+  anchors.fill: parent
+
+  Component.onCompleted: {
+    if (pluginApi) {
+      Logger.i("HelloWorld", "Panel initialized");
+    }
+  }
+
+  Rectangle {
+    id: panelContainer
+    anchors.fill: parent
+    color: Color.transparent
+
+    ColumnLayout {
+      anchors {
+        fill: parent
+        margins: Style.marginL
+      }
+      spacing: Style.marginL
+
+      // Content area
+      Rectangle {
+        Layout.fillWidth: true
+        Layout.fillHeight: true
+        color: Color.mSurfaceVariant
+        radius: Style.radiusL
+
+        ColumnLayout {
+          anchors.centerIn: parent
+          spacing: Style.marginXL
+
+          // Large hello message
+          NIcon {
+            icon: "noctalia"
+            Layout.alignment: Qt.AlignHCenter
+            pointSize: Style.fontSizeXXL * 3 * Style.uiScaleRatio
+          }
+
+          NText {
+            Layout.alignment: Qt.AlignHCenter
+            text: pluginApi?.pluginSettings?.message || pluginApi?.manifest?.metadata?.defaultSettings?.message || ""
+            font.pointSize: Style.fontSizeXXL * Style.uiScaleRatio
+            font.weight: Font.Bold
+            color: Color.mPrimary
+          }
+
+          Text {
+            Layout.alignment: Qt.AlignHCenter
+            text: "This is a plugin panel!"
+            font.pointSize: Style.fontSizeL * Style.uiScaleRatio
+            color: Color.mOnSurfaceVariant
+          }
+        }
+      }
+
+      // Info section
+      ColumnLayout {
+        Layout.fillWidth: true
+        spacing: Style.marginM
+
+        NText {
+          text: "Plugin Information"
+          font.pointSize: Style.fontSizeM * Style.uiScaleRatio
+          font.weight: Font.Medium
+          color: Color.mOnSurface
+        }
+
+        Rectangle {
+          Layout.fillWidth: true
+          Layout.preferredHeight: infoColumn.implicitHeight + Style.marginM * 2
+          color: Color.mSurfaceVariant
+          radius: Style.radiusM
+
+          ColumnLayout {
+            id: infoColumn
+            anchors {
+              fill: parent
+              margins: Style.marginM
+            }
+            spacing: Style.marginS
+
+            RowLayout {
+              Layout.fillWidth: true
+              spacing: Style.marginM
+
+              NText {
+                text: "Plugin ID:"
+                font.pointSize: Style.fontSizeS
+                color: Color.mOnSurfaceVariant
+                Layout.preferredWidth: 100
+              }
+
+              NText {
+                text: pluginApi?.pluginId || "unknown"
+                font.pointSize: Style.fontSizeS
+                font.family: Settings.data.ui.fontFixed
+                color: Color.mOnSurface
+                Layout.fillWidth: true
+              }
+            }
+
+            RowLayout {
+              Layout.fillWidth: true
+              spacing: Style.marginM
+
+              NText {
+                text: "Plugin Dir:"
+                font.pointSize: Style.fontSizeS
+                color: Color.mOnSurfaceVariant
+                Layout.preferredWidth: 100
+              }
+
+              NText {
+                text: pluginApi?.pluginDir || "unknown"
+                font.pointSize: Style.fontSizeS
+                color: Color.mOnSurface
+                Layout.fillWidth: true
+                elide: Text.ElideMiddle
+              }
+            }
+
+            RowLayout {
+              Layout.fillWidth: true
+              spacing: Style.marginM
+
+              Text {
+                text: "IPC Commands:"
+                font.pointSize: Style.fontSizeS
+                 font.family: Settings.data.ui.fontFixed
+                color: Color.mOnSurfaceVariant
+                Layout.preferredWidth: 100
+              }
+
+              NText {
+                text: "setMessage"
+                font.pointSize: Style.fontSizeS
+                font.family: Settings.data.ui.fontFixed
+                color: Color.mOnSurface
+                Layout.fillWidth: true
+              }
+            }
+          }
+        }
+
+        // IPC Examples
+        Text {
+          Layout.topMargin: Style.marginM
+          text: "Try these IPC commands:"
+          font.pointSize: Style.fontSizeM * Style.uiScaleRatio
+          font.weight: Font.Medium
+          color: Color.mOnSurface
+        }
+
+        Rectangle {
+          Layout.fillWidth: true
+          Layout.preferredHeight: examplesColumn.implicitHeight + Style.marginM * 2
+          color: Color.mSurfaceVariant
+          radius: Style.radiusM
+
+          ColumnLayout {
+            id: examplesColumn
+            anchors {
+              fill: parent
+              margins: Style.marginM
+            }
+            spacing: Style.marginS
+
+            NText {
+              text: "$ qs -p . ipc call plugin:hello-world setMessage \"Bonjour\""
+              font.pointSize: Style.fontSizeS
+              font.family: Settings.data.ui.fontFixed
+              color: Color.mPrimary
+              Layout.fillWidth: true
+              wrapMode: Text.WrapAnywhere
+            }
+          }
+        }
+      }
+    }
+  }
+}
