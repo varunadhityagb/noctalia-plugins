@@ -42,14 +42,10 @@ Rectangle {
   color: Style.capsuleColor
 
   PwObjectTracker {
-    // Filter out device nodes to avoid errors with nodes that have attached devices
-    // Keep streams, sinks, and other node types needed for detection
-    objects: Pipewire.ready ? (Pipewire.nodes.values || []).filter(function(node) {
-      if (!node || !node.properties) return false;
-      var mediaClass = node.properties["media.class"] || "";
-      // Exclude device nodes (Audio/Device, Video/Device) which cause the error
-      return mediaClass.indexOf("/Device") === -1;
-    }) : []
+      // Track all audio nodes (including streams) for privacy monitoring
+      objects: Pipewire.ready
+              ? Pipewire.nodes.values.filter(node => node.audio || (node.properties && node.properties["media.class"]))
+              : []
   }
 
   Process {
