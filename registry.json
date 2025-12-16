@@ -81,13 +81,13 @@
     {
       "id": "update-count",
       "name": "Update Count",
-      "version": "1.0.3",
+      "version": "1.0.4",
       "author": "BukoMoon",
       "description": "Requires: gum. Periodically scans for new updates and displays them. Clicking the widget will open a terminal script to update your packages.",
       "repository": "https://github.com/noctalia-dev/noctalia-plugins",
       "minNoctaliaVersion": "3.6.0",
       "license": "GPLv3",
-      "lastUpdated": "2025-12-16T09:51:33-05:00"
+      "lastUpdated": "2025-12-16T10:12:55-05:00"
     }
   ]
 }
