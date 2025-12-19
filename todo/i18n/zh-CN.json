@@ -1,0 +1,55 @@
+{
+  "panel": {
+    "header": {
+      "title": "待办事项列表",
+      "clear_completed_button": "清除已完成"
+    },
+    "add_todo": {
+      "placeholder": "输入新的待办事项...",
+      "add_button": "添加"
+    },
+    "empty_state": {
+      "message": "暂无待办事项"
+    },
+    "info": {
+      "title": "插件信息",
+      "plugin_id_label": "插件ID:",
+      "unknown_value": "未知",
+      "plugin_dir_label": "插件目录:",
+      "ipc_commands_label": "IPC命令:",
+      "ipc_commands_list": "addTodo, toggleTodo, clearCompleted"
+    },
+    "todo_item": {
+      "delete_button_tooltip": "删除"
+    }
+  },
+  "settings": {
+    "background_color": {
+      "label": "背景颜色",
+      "description": "待办事项小部件的背景颜色"
+    },
+    "show_completed": {
+      "label": "显示已完成的待办事项",
+      "description": "在面板中显示已完成的待办事项"
+    }
+  },
+  "bar_widget": {
+    "todo_count_singular": "{count} 个待办事项",
+    "todo_count_plural": "{count} 个待办事项"
+  },
+  "main": {
+    "added_new_todo": "已添加新待办事项: ",
+    "todo_completed": "已完成",
+    "todo_marked_incomplete": "标记为未完成",
+    "todo_status_changed": "待办事项 ",
+    "todo_not_found": "ID为 ",
+    "not_found_suffix": " 的待办事项未找到",
+    "cleared_completed_todos": "清除了 ",
+    "completed_todos_suffix": " 个已完成的待办事项"
+  },
+  "desktop_widget": {
+    "header_title": "待办事项列表",
+    "items_count": "{active}/{total} 项",
+    "empty_state": "暂无待办事项"
+  }
+}

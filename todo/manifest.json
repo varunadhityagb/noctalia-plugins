@@ -1,0 +1,28 @@
+{
+  "id": "todo",
+  "name": "Todo Plugin",
+  "version": "1.0.0",
+  "minNoctaliaVersion": "3.7.1",
+  "author": "lonerOrz <lonerOrz@qq.com>",
+  "license": "MIT",
+  "repository": "https://github.com/noctalia-dev/noctalia-plugins",
+  "description": "A simple todo list manager plugin for Noctalia Shell.",
+  "entryPoints": {
+    "main": "Main.qml",
+    "barWidget": "BarWidget.qml",
+    "desktopWidget": "DesktopWidget.qml",
+    "panel": "Panel.qml",
+    "settings": "Settings.qml"
+  },
+  "dependencies": {
+    "plugins": []
+  },
+  "metadata": {
+    "defaultSettings": {
+      "todos": [],
+      "count": 0,
+      "completedCount": 0,
+      "showCompleted": true
+    }
+  }
+}
