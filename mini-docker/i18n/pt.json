@@ -1,12 +1,8 @@
 {
-  "intervals": {
-    "10_seconds": "10 segundos",
-    "1_second": "1 segundo",
-    "30_seconds": "30 segundos",
-    "5_seconds": "5 segundos"
-  },
   "settings": {
     "current_value": "Selecionado: {value} ms",
+    "default_network_description": "Rede padrão a ser usada ao executar imagens",
+    "default_network_label": "Rede Padrão",
     "general": "Geral",
     "refresh_interval_description": "Com que frequência o plugin verifica o status dos contêineres",
     "refresh_interval_label": "Intervalo de atualização",
@@ -14,15 +10,7 @@
   },
   "tooltip": {
     "docker_not_available": "Docker não disponível",
+    "image_already_running": "Imagem já em execução em um contêiner.",
     "running_containers": "Contêineres em execução: %1"
-  },
-  "ui": {
-    "containers": "Contêineres",
-    "prune": "Limpar",
-    "refresh": "Atualizar",
-    "remove": "Remover",
-    "start": "Iniciar",
-    "stop": "Parar",
-    "volumes": "Volumes"
   }
 }

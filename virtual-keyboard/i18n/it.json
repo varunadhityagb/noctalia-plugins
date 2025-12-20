@@ -1,0 +1,27 @@
+{
+  "options": {
+    "layout": {
+      "auto": "automata (QWERTY)",
+      "azerty": "AZERTY",
+      "dvorak": "DVORAK",
+      "qwerty": "QWERTY"
+    },
+    "size": {
+      "compact": "kompakt",
+      "full": "voller"
+    }
+  },
+  "settings": {
+    "layout": {
+      "description": "Ndrysho tastierën.",
+      "label": "Disposizione tastiera virtuale"
+    },
+    "size": {
+      "description": "Ndrysho madhësinë e tastierës",
+      "label": "Madhësia e tastierës virtuale"
+    }
+  },
+  "tooltip": {
+    "toggle-button": "Bật/Tắt Bàn phím Ảo"
+  }
+}

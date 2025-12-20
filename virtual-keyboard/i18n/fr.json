@@ -1,27 +1,27 @@
 {
-  "tooltip": {
-    "toggle-button": "Activer le Clavier Virtuel"
-  },
-  "settings": {
-    "layout": {
-      "label": "Disposition du Clavier Virtuel",
-      "description": "Changez la disposition des touches"
-    },
-    "size": {
-      "label": "Taille du clavier",
-      "description": "Changez la taille du clavier"
-    }
-  },
   "options": {
     "layout": {
       "auto": "auto (AZERTY)",
-      "qwerty": "QWERTY",
       "azerty": "AZERTY",
-      "dvorak": "DVORAK"
+      "dvorak": "DVORAK",
+      "qwerty": "QWERTY"
     },
     "size": {
       "compact": "compacte",
       "full": "complet"
     }
+  },
+  "settings": {
+    "layout": {
+      "description": "Changez la disposition des touches",
+      "label": "Disposition du Clavier Virtuel"
+    },
+    "size": {
+      "description": "Changez la taille du clavier",
+      "label": "Taille du clavier"
+    }
+  },
+  "tooltip": {
+    "toggle-button": "Activer le Clavier Virtuel"
   }
 }

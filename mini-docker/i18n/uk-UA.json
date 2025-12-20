@@ -1,12 +1,8 @@
 {
-  "intervals": {
-    "10_seconds": "10 секунд",
-    "1_second": "1 секунда",
-    "30_seconds": "30 секунд",
-    "5_seconds": "5 секунд"
-  },
   "settings": {
     "current_value": "Обрано: {value} мс",
+    "default_network_description": "Мережа за замовчуванням для використання під час запуску образів",
+    "default_network_label": "Мережа за замовчуванням",
     "general": "Загальні",
     "refresh_interval_description": "Як часто плагін перевіряє статус контейнерів",
     "refresh_interval_label": "Інтервал оновлення",
@@ -14,15 +10,7 @@
   },
   "tooltip": {
     "docker_not_available": "Docker недоступний",
+    "image_already_running": "Зображення вже запущено в контейнері.",
     "running_containers": "Запущені контейнери: %1"
-  },
-  "ui": {
-    "containers": "Контейнери",
-    "prune": "Очистити",
-    "refresh": "Оновити",
-    "remove": "Видалити",
-    "start": "Запустити",
-    "stop": "Зупинити",
-    "volumes": "Томи"
   }
 }

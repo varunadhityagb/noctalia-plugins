@@ -1,12 +1,8 @@
 {
-  "intervals": {
-    "10_seconds": "10 Sekunden",
-    "1_second": "1 sekonda",
-    "30_seconds": "30 sekunder",
-    "5_seconds": "5 Sekunden"
-  },
   "settings": {
     "current_value": "Zgjodhur: {value} ms",
+    "default_network_description": "Netzwerkstandard für die Ausführung von Images",
+    "default_network_label": "Netzstandard",
     "general": "Ġeneralo",
     "refresh_interval_description": "Sa unsang kasubsub ang plugin nagsusi sa mga kausaban sa kahimtang sa sudlanan",
     "refresh_interval_label": "Interval rifreskoje",
@@ -14,15 +10,7 @@
   },
   "tooltip": {
     "docker_not_available": "Docker ekki tiltækt",
+    "image_already_running": "Imaj ki deja ap kouri nan yon veso",
     "running_containers": "Kontenjerët aktivë: %1"
-  },
-  "ui": {
-    "containers": "Konteniturët",
-    "prune": "Obrezati",
-    "refresh": "Rifresko",
-    "remove": "Kujiondoa",
-    "start": "Začnite",
-    "stop": "Stop it: Halt",
-    "volumes": "Vëllimet"
   }
 }

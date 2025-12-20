@@ -1,0 +1,27 @@
+{
+  "options": {
+    "layout": {
+      "auto": "自动 (QWERTY)",
+      "azerty": "AZERTY",
+      "dvorak": "德沃夏克",
+      "qwerty": "QWERTY"
+    },
+    "size": {
+      "compact": "紧凑",
+      "full": "全部"
+    }
+  },
+  "settings": {
+    "layout": {
+      "description": "更改键盘布局",
+      "label": "虚拟键盘布局"
+    },
+    "size": {
+      "description": "更改键盘大小",
+      "label": "虚拟键盘大小"
+    }
+  },
+  "tooltip": {
+    "toggle-button": "切换虚拟键盘"
+  }
+}

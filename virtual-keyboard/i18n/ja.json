@@ -1,0 +1,27 @@
+{
+  "options": {
+    "layout": {
+      "auto": "自動 (QWERTY)",
+      "azerty": "AZERTY",
+      "dvorak": "ドヴォルザーク",
+      "qwerty": "QWERTY"
+    },
+    "size": {
+      "compact": "コンパクト",
+      "full": "満杯 (manpai)"
+    }
+  },
+  "settings": {
+    "layout": {
+      "description": "キーボードレイアウトを変更する",
+      "label": "仮想キーボードレイアウト"
+    },
+    "size": {
+      "description": "キーボードのサイズを変更する",
+      "label": "仮想キーボードのサイズ"
+    }
+  },
+  "tooltip": {
+    "toggle-button": "仮想キーボードの切り替え"
+  }
+}

@@ -1,0 +1,55 @@
+{
+  "bar_widget": {
+    "todo_count_plural": "{count} tarefas",
+    "todo_count_singular": "{count} tarefa(s)"
+  },
+  "desktop_widget": {
+    "empty_state": "Sem tarefas pendentes.",
+    "header_title": "Lista de Tarefas",
+    "items_count": "{active} de {total} itens"
+  },
+  "main": {
+    "added_new_todo": "Adicionado novo afazer:",
+    "cleared_completed_todos": "Liberado",
+    "completed_todos_suffix": "Tarefas concluídas",
+    "not_found_suffix": "não encontrado",
+    "todo_completed": "concluído",
+    "todo_marked_incomplete": "marcado como incompleto",
+    "todo_not_found": "Tarefa com ID",
+    "todo_status_changed": "Tudo"
+  },
+  "panel": {
+    "add_todo": {
+      "add_button": "Adicionar",
+      "placeholder": "Insira um novo item da lista de tarefas..."
+    },
+    "empty_state": {
+      "message": "Nenhum item de afazeres ainda."
+    },
+    "header": {
+      "clear_completed_button": "Limpar Concluídos",
+      "title": "Lista de Tarefas"
+    },
+    "info": {
+      "ipc_commands_label": "Comandos IPC:",
+      "ipc_commands_list": "adicionarTarefa, alternarTarefa, limparConcluídas",
+      "plugin_dir_label": "Diretório de plugins:",
+      "plugin_id_label": "ID do plugin:",
+      "title": "Informações do Plugin",
+      "unknown_value": "Desconhecido"
+    },
+    "todo_item": {
+      "delete_button_tooltip": "Apagar"
+    }
+  },
+  "settings": {
+    "background_color": {
+      "description": "Cor de fundo do widget de tarefas",
+      "label": "Cor de fundo"
+    },
+    "show_completed": {
+      "description": "Exibir itens de tarefa concluídos no painel",
+      "label": "Mostrar To-dos Concluídos"
+    }
+  }
+}

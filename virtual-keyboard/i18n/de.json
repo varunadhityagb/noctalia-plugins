@@ -1,0 +1,27 @@
+{
+  "options": {
+    "layout": {
+      "auto": "Auto (QWERTY)",
+      "azerty": "AZERTY",
+      "dvorak": "DVORAK",
+      "qwerty": "QWERTZ"
+    },
+    "size": {
+      "compact": "kompakt",
+      "full": "voll"
+    }
+  },
+  "settings": {
+    "layout": {
+      "description": "Tastaturlayout ändern",
+      "label": "Virtuelles Tastaturlayout"
+    },
+    "size": {
+      "description": "Tastaturgröße ändern",
+      "label": "Virtuelle Tastaturgröße"
+    }
+  },
+  "tooltip": {
+    "toggle-button": "Virtuelle Tastatur umschalten"
+  }
+}

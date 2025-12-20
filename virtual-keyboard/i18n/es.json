@@ -1,0 +1,27 @@
+{
+  "options": {
+    "layout": {
+      "auto": "automático (QWERTY)",
+      "azerty": "AZERTY",
+      "dvorak": "DVORAK",
+      "qwerty": "QWERTY"
+    },
+    "size": {
+      "compact": "compacto",
+      "full": "completo"
+    }
+  },
+  "settings": {
+    "layout": {
+      "description": "Cambiar la distribución del teclado",
+      "label": "Disposición del teclado virtual"
+    },
+    "size": {
+      "description": "Cambiar el tamaño del teclado",
+      "label": "Tamaño del teclado virtual"
+    }
+  },
+  "tooltip": {
+    "toggle-button": "Activar/desactivar teclado virtual"
+  }
+}

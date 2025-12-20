@@ -1,0 +1,27 @@
+{
+  "options": {
+    "layout": {
+      "auto": "otomatik (QWERTY)",
+      "azerty": "AZERTY",
+      "dvorak": "Dvořák",
+      "qwerty": "QWERTY"
+    },
+    "size": {
+      "compact": "kompakt",
+      "full": "tam"
+    }
+  },
+  "settings": {
+    "layout": {
+      "description": "Klavye düzenini değiştir",
+      "label": "Sanal Klavye Düzeni"
+    },
+    "size": {
+      "description": "Klavye boyutunu değiştir",
+      "label": "Sanal Klavye Boyutu"
+    }
+  },
+  "tooltip": {
+    "toggle-button": "Sanal Klavye'yi Aç/Kapat"
+  }
+}

@@ -1,16 +1,8 @@
 {
-  "intervals": {
-    "10_seconds": "10 segundos",
-    "1_second": "1 segundo",
-    "30_seconds": "30 segundos",
-    "5_seconds": "5 segundos"
-  },
   "settings": {
     "current_value": "Seleccionado: {value} ms",
     "default_network_description": "Default network to use when running images",
     "default_network_label": "Default Network",
-    "default_port_description": "Default port to use when running images",
-    "default_port_label": "Default Port",
     "general": "General",
     "refresh_interval_description": "Con qué frecuencia el plugin verifica el estado de los contenedores",
     "refresh_interval_label": "Intervalo de actualización",
@@ -20,16 +12,5 @@
     "docker_not_available": "Docker no disponible",
     "image_already_running": "Image already running in a container",
     "running_containers": "Contenedores en ejecución: %1"
-  },
-  "ui": {
-    "containers": "Contenedores",
-    "images": "Images",
-    "prune": "Limpiar",
-    "refresh": "Actualizar",
-    "remove": "Eliminar",
-    "run": "Run",
-    "start": "Iniciar",
-    "stop": "Detener",
-    "volumes": "Volúmenes"
   }
 }

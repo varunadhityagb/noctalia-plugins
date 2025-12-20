@@ -1,12 +1,8 @@
 {
-  "intervals": {
-    "10_seconds": "10 seconden",
-    "1_second": "1 seconde",
-    "30_seconds": "30 seconden",
-    "5_seconds": "5 seconden"
-  },
   "settings": {
     "current_value": "Geselecteerd: {value} ms",
+    "default_network_description": "Standaardnetwerk dat gebruikt moet worden bij het uitvoeren van images",
+    "default_network_label": "Standaardnetwerk",
     "general": "Algemeen",
     "refresh_interval_description": "Hoe vaak de plugin de containerstatus controleert",
     "refresh_interval_label": "Vernieuwingsinterval",
@@ -14,15 +10,7 @@
   },
   "tooltip": {
     "docker_not_available": "Docker niet beschikbaar",
+    "image_already_running": "Afbeelding draait al in een container.",
     "running_containers": "Lopende containers: %1"
-  },
-  "ui": {
-    "containers": "Containers",
-    "prune": "Opschonen",
-    "refresh": "Vernieuwen",
-    "remove": "Verwijderen",
-    "start": "Starten",
-    "stop": "Stoppen",
-    "volumes": "Volumes"
   }
 }

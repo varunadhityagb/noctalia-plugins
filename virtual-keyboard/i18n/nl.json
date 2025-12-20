@@ -8,20 +8,20 @@
     },
     "size": {
       "compact": "compact",
-      "full": "full"
+      "full": "vol"
     }
   },
   "settings": {
     "layout": {
-      "description": "Change the keyboard layout",
-      "label": "Virtual Keyboard layout"
+      "description": "De toetsenbordindeling wijzigen",
+      "label": "Virtuele toetsenbordindeling"
     },
     "size": {
-      "description": "Change the keyboard size",
-      "label": "Virtual Keyboard size"
+      "description": "Toetsenbordgrootte wijzigen",
+      "label": "Virtuele toetsenbordgrootte"
     }
   },
   "tooltip": {
-    "toggle-button": "Toggle Virtual Keyboard"
+    "toggle-button": "Virtueel toetsenbord in-/uitschakelen"
   }
 }
