@@ -4,13 +4,13 @@
     {
       "id": "catwalk",
       "name": "Catwalk",
-      "version": "1.1.1",
+      "version": "1.1.2",
       "author": "MannuVilasara",
       "description": "A cute animated cat for your bar.",
       "repository": "https://github.com/noctalia-dev/noctalia-plugins",
       "minNoctaliaVersion": "3.6.0",
       "license": "MIT",
-      "lastUpdated": "2025-12-30T10:46:21-08:00"
+      "lastUpdated": "2026-01-04T14:00:40-05:00"
     },
     {
       "id": "fancy-audiovisualizer",
@@ -26,13 +26,13 @@
     {
       "id": "hello-world",
       "name": "Hello World",
-      "version": "1.0.4",
+      "version": "1.0.5",
       "author": "Noctalia Team <team@noctalia.dev>",
       "description": "A simple Hello World plugin demonstrating functionalities.",
       "repository": "https://github.com/noctalia-dev/noctalia-plugins",
       "minNoctaliaVersion": "3.6.0",
       "license": "MIT",
-      "lastUpdated": "2025-12-21T22:07:55+01:00"
+      "lastUpdated": "2026-01-04T14:00:40-05:00"
     },
     {
       "id": "kaomoji-provider",
@@ -46,37 +46,26 @@
       "lastUpdated": "2026-01-04T12:21:26-05:00"
     },
     {
-      "id": "launcher-button",
-      "name": "Launcher Button",
-      "version": "1.0.0",
-      "author": "Noctalia Team <team@noctalia.dev>",
-      "description": "A simple button that opens the app launcher.",
-      "repository": "https://github.com/noctalia-dev/noctalia-plugins",
-      "minNoctaliaVersion": "3.6.0",
-      "license": "MIT",
-      "lastUpdated": "2025-12-07T16:04:14+01:00"
-    },
-    {
       "id": "mangowc-layout-switcher",
       "name": "Mangowc Layout Switcher",
-      "version": "1.1.1",
+      "version": "1.1.2",
       "author": "atheeq-rhxn",
       "description": "Switch between different mangowc layouts",
       "repository": "https://github.com/noctalia-dev/noctalia-plugins",
       "minNoctaliaVersion": "3.6.0",
       "license": "MIT",
-      "lastUpdated": "2026-01-04T10:43:10+05:30"
+      "lastUpdated": "2026-01-04T14:00:40-05:00"
     },
     {
       "id": "mini-docker",
       "name": "Mini Docker",
-      "version": "2.1.0",
+      "version": "2.1.1",
       "author": "MannuVilasara",
       "description": "Manage Docker containers, images, volumes & networks",
       "repository": "https://github.com/noctalia-dev/noctalia-plugins",
       "minNoctaliaVersion": "3.6.0",
       "license": "MIT",
-      "lastUpdated": "2025-12-17T22:22:38+05:30"
+      "lastUpdated": "2026-01-04T14:00:40-05:00"
     },
     {
       "id": "network-indicator",
@@ -92,13 +81,13 @@
     {
       "id": "noctalia-supergfxctl",
       "name": "SuperGFX Control",
-      "version": "0.0.1",
+      "version": "0.0.2",
       "author": "cod3d <cod3ddot@proton.me>",
       "description": "GPU control with supergfxctl for noctalia.",
       "repository": "https://github.com/cod3ddot/noctalia-supergfxctl",
       "minNoctaliaVersion": "3.7.5",
       "license": "AGPL-3.0-or-later",
-      "lastUpdated": "2025-12-28T14:49:30-08:00"
+      "lastUpdated": "2026-01-04T14:00:40-05:00"
     },
     {
       "id": "privacy-indicator",
@@ -114,24 +103,24 @@
     {
       "id": "simple-notes",
       "name": "Simple Notes",
-      "version": "1.0.0",
+      "version": "1.0.1",
       "author": "fusuyfusuy",
       "description": "A simple note taking plugin for Noctalia Shell.",
       "repository": "",
       "minNoctaliaVersion": "3.7.1",
       "license": "MIT",
-      "lastUpdated": "2025-12-29T15:32:27+03:00"
+      "lastUpdated": "2026-01-04T14:00:40-05:00"
     },
     {
       "id": "todo",
       "name": "Todo List",
-      "version": "1.4.0",
+      "version": "1.4.1",
       "author": "lonerOrz <lonerOrz@qq.com>",
       "description": "A simple todo list manager plugin for Noctalia Shell.",
       "repository": "https://github.com/noctalia-dev/noctalia-plugins",
       "minNoctaliaVersion": "3.7.1",
       "license": "MIT",
-      "lastUpdated": "2026-01-03T15:38:36+08:00"
+      "lastUpdated": "2026-01-04T14:00:40-05:00"
     },
     {
       "id": "update-count",
