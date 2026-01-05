@@ -10,6 +10,12 @@
       "repository": "https://github.com/noctalia-dev/noctalia-plugins",
       "minNoctaliaVersion": "3.6.0",
       "license": "MIT",
+      "tags": [
+        "Bar",
+        "Desktop",
+        "Panel",
+        "Fun"
+      ],
       "lastUpdated": "2026-01-04T21:11:31-05:00"
     },
     {
@@ -21,6 +27,10 @@
       "repository": "https://github.com/noctalia-dev/noctalia-plugins",
       "minNoctaliaVersion": "3.7.2",
       "license": "MIT",
+      "tags": [
+        "Desktop",
+        "Audio"
+      ],
       "lastUpdated": "2026-01-04T21:11:31-05:00"
     },
     {
@@ -32,6 +42,11 @@
       "repository": "https://github.com/noctalia-dev/noctalia-plugins",
       "minNoctaliaVersion": "3.6.0",
       "license": "MIT",
+      "tags": [
+        "Bar",
+        "Desktop",
+        "Panel"
+      ],
       "lastUpdated": "2026-01-04T21:11:31-05:00"
     },
     {
@@ -43,6 +58,10 @@
       "repository": "https://github.com/noctalia-dev/noctalia-plugins",
       "minNoctaliaVersion": "3.9.0",
       "license": "MIT",
+      "tags": [
+        "Launcher",
+        "Fun"
+      ],
       "lastUpdated": "2026-01-04T21:11:31-05:00"
     },
     {
@@ -54,6 +73,11 @@
       "repository": "https://github.com/noctalia-dev/noctalia-plugins",
       "minNoctaliaVersion": "3.6.0",
       "license": "MIT",
+      "tags": [
+        "Bar",
+        "Panel",
+        "Gaming"
+      ],
       "lastUpdated": "2026-01-04T21:11:31-05:00"
     },
     {
@@ -65,6 +89,11 @@
       "repository": "https://github.com/noctalia-dev/noctalia-plugins",
       "minNoctaliaVersion": "3.6.0",
       "license": "MIT",
+      "tags": [
+        "Bar",
+        "Panel",
+        "Development"
+      ],
       "lastUpdated": "2026-01-04T21:11:31-05:00"
     },
     {
@@ -76,6 +105,11 @@
       "repository": "https://github.com/noctalia-dev/noctalia-plugins",
       "minNoctaliaVersion": "3.7.5",
       "license": "MIT",
+      "tags": [
+        "Bar",
+        "Network",
+        "Indicator"
+      ],
       "lastUpdated": "2026-01-04T21:11:31-05:00"
     },
     {
@@ -87,6 +121,12 @@
       "repository": "https://github.com/cod3ddot/noctalia-supergfxctl",
       "minNoctaliaVersion": "3.7.5",
       "license": "AGPL-3.0-or-later",
+      "tags": [
+        "Bar",
+        "Panel",
+        "System",
+        "Gaming"
+      ],
       "lastUpdated": "2026-01-04T21:11:31-05:00"
     },
     {
@@ -98,6 +138,11 @@
       "repository": "https://github.com/noctalia-dev/noctalia-plugins",
       "minNoctaliaVersion": "3.6.0",
       "license": "MIT",
+      "tags": [
+        "Bar",
+        "Privacy",
+        "Indicator"
+      ],
       "lastUpdated": "2026-01-04T21:11:31-05:00"
     },
     {
@@ -109,6 +154,11 @@
       "repository": "",
       "minNoctaliaVersion": "3.7.1",
       "license": "MIT",
+      "tags": [
+        "Bar",
+        "Panel",
+        "Productivity"
+      ],
       "lastUpdated": "2026-01-04T21:11:31-05:00"
     },
     {
@@ -120,6 +170,12 @@
       "repository": "https://github.com/noctalia-dev/noctalia-plugins",
       "minNoctaliaVersion": "3.7.1",
       "license": "MIT",
+      "tags": [
+        "Bar",
+        "Desktop",
+        "Panel",
+        "Productivity"
+      ],
       "lastUpdated": "2026-01-04T21:11:31-05:00"
     },
     {
@@ -131,6 +187,10 @@
       "repository": "https://github.com/noctalia-dev/noctalia-plugins",
       "minNoctaliaVersion": "3.6.0",
       "license": "GPLv3",
+      "tags": [
+        "Bar",
+        "System"
+      ],
       "lastUpdated": "2026-01-04T21:11:31-05:00"
     }
   ]
