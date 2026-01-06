@@ -7,7 +7,7 @@
   "license": "MIT",
   "repository": "https://github.com/noctalia-dev/noctalia-plugins",
   "description": "A simple Hello World plugin demonstrating functionalities. For developers only.",
-  "tags": ["Bar", "Desktop", "Panel"],
+  "tags": ["Development"],
   "entryPoints": {
     "main": "Main.qml",
     "barWidget": "BarWidget.qml",
