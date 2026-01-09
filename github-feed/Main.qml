@@ -9,6 +9,12 @@ Item {
 
     property var pluginApi: null
 
+    readonly property bool debugMode: Quickshell.env("NOCTALIA_DEBUG") === "1"
+
+    function logDebug(msg) {
+        if (root.debugMode) Logger.d("GitHubFeed", msg)
+    }
+
     property var rawEvents: []
     readonly property var events: filterEvents(rawEvents)
 
@@ -23,26 +29,51 @@ Item {
     readonly property int refreshInterval: pluginApi?.pluginSettings?.refreshInterval || 1800
     readonly property int maxEvents: pluginApi?.pluginSettings?.maxEvents || 50
 
+    readonly property int batchSize: 8
+    readonly property int parallelCount: 6
+    readonly property int maxRetries: 3
+    readonly property int maxStarsPerUser: 3
+    readonly property int maxReposPerUser: 2
+    readonly property int maxForksPerUser: 2
+    readonly property int maxPRsPerUser: 2
+
     readonly property bool showStars: pluginApi?.pluginSettings?.showStars ?? true
     readonly property bool showForks: pluginApi?.pluginSettings?.showForks ?? true
     readonly property bool showPRs: pluginApi?.pluginSettings?.showPRs ?? true
-    readonly property bool showIssues: pluginApi?.pluginSettings?.showIssues ?? true
-    readonly property bool showPushes: pluginApi?.pluginSettings?.showPushes ?? false
+    readonly property bool showRepoCreations: pluginApi?.pluginSettings?.showRepoCreations ?? true
+    readonly property bool showMyRepoStars: pluginApi?.pluginSettings?.showMyRepoStars ?? true
+    readonly property bool showMyRepoForks: pluginApi?.pluginSettings?.showMyRepoForks ?? true
 
     readonly property string cacheDir: pluginApi?.pluginDir ? pluginApi.pluginDir + "/cache" : ""
     readonly property string eventsCachePath: cacheDir + "/events.json"
     readonly property string avatarsDir: cacheDir + "/avatars"
 
-    property var receivedEvents: []
-    property var myRepoEvents: []
-    property var userRepos: []
-    property int pendingFetches: 0
+    property var collectedEvents: []
     property var availableAvatars: ({})
+
+    property var userBatches: []
+    property var batchQueue: []
+    property int completedBatches: 0
+    property int totalBatches: 0
+    property int totalGraphQLCost: 0
+    property double fetchStartTime: 0
 
     function filterEvents(rawList) {
         if (!rawList || rawList.length === 0) return []
 
+        var now = Date.now()
+        var sevenDaysAgo = now - (7 * 24 * 60 * 60 * 1000)
+
         var filtered = rawList.filter(function(event) {
+            var eventDate = new Date(event.created_at).getTime()
+            if (eventDate < sevenDaysAgo) return false
+
+            if (event.isMyRepoEvent) {
+                if (event.type === "WatchEvent") return root.showMyRepoStars
+                if (event.type === "ForkEvent") return root.showMyRepoForks
+                return true
+            }
+
             switch (event.type) {
                 case "WatchEvent":
                     return root.showStars
@@ -50,10 +81,8 @@ Item {
                     return root.showForks
                 case "PullRequestEvent":
                     return root.showPRs
-                case "IssuesEvent":
-                    return root.showIssues
-                case "PushEvent":
-                    return root.showPushes
+                case "CreateEvent":
+                    return root.showRepoCreations
                 default:
                     return true
             }
@@ -68,21 +97,15 @@ Item {
         watchChanges: false
 
         onLoaded: {
-            Logger.d("GitHubFeed", "Cache loaded from disk")
+            logDebug("Cache loaded from disk")
             loadFromCache()
         }
 
         onLoadFailed: function(error) {
-            Logger.d("GitHubFeed", "No cache file found, will fetch fresh data")
-            if (root.username) {
+            logDebug("No cache file found, will fetch fresh data")
+            if (root.username && root.token) {
                 fetchFromGitHub()
             }
-        }
-
-        JsonAdapter {
-            id: cacheAdapter
-            property var events: []
-            property int timestamp: 0
         }
     }
 
@@ -90,13 +113,13 @@ Item {
         try {
             var content = eventsCacheFile.text()
             if (!content || content.trim() === "") {
-                if (root.username) fetchFromGitHub()
+                if (root.username && root.token) fetchFromGitHub()
                 return
             }
 
             var cached = JSON.parse(content)
             if (!cached || !cached.events) {
-                if (root.username) fetchFromGitHub()
+                if (root.username && root.token) fetchFromGitHub()
                 return
             }
 
@@ -107,69 +130,47 @@ Item {
 
             if (age < root.refreshInterval) {
                 root.rawEvents = cached.events
-                Logger.i("GitHubFeed", "Using cached data, age: " + Math.floor(age / 60) + " min")
+                Logger.i("GitHubFeed", "Using cached data (" + cached.events.length + " events), age: " + Math.floor(age / 60) + " min")
             } else {
                 Logger.i("GitHubFeed", "Cache expired, fetching fresh data")
-                if (root.username) fetchFromGitHub()
+                if (root.username && root.token) fetchFromGitHub()
             }
         } catch (e) {
-            Logger.e("GitHubFeed", "Failed to parse cache:", e)
-            if (root.username) fetchFromGitHub()
+            Logger.e("GitHubFeed", "Failed to parse cache: " + e)
+            if (root.username && root.token) fetchFromGitHub()
         }
     }
 
     function saveToCache() {
         if (!root.cacheDir) return
 
-        cacheAdapter.events = root.rawEvents
-        cacheAdapter.timestamp = Math.floor(Date.now() / 1000)
-        eventsCacheFile.writeAdapter()
-
-        Logger.d("GitHubFeed", "Cache saved with " + root.rawEvents.length + " raw events")
-    }
-
-    function buildCurlCommand(url) {
-        var cmd = ["curl", "-s", "-L", "--compressed", "--connect-timeout", "10", "--max-time", "30"]
-
-        if (root.token && root.token.trim() !== "") {
-            cmd.push("-H")
-            cmd.push("Authorization: Bearer " + root.token)
-        }
-
-        cmd.push("-H")
-        cmd.push("Accept: application/vnd.github.v3+json")
-        cmd.push("-H")
-        cmd.push("User-Agent: noctalia-github-feed")
-        cmd.push(url)
-
-        return cmd
-    }
-
-    function handleApiError(data, context) {
-        if (data && data.message) {
-            var msg = data.message
-            Logger.e("GitHubFeed", context + " API error:", msg)
-
-            if (msg.indexOf("rate limit") !== -1) {
-                root.hasError = true
-                root.errorMessage = "Rate limit exceeded. Add a GitHub token in settings."
-                ToastService.showError("GitHub Feed", "API rate limit exceeded. Please add a Personal Access Token in settings.")
-            } else if (msg.indexOf("Not Found") !== -1) {
-                root.hasError = true
-                root.errorMessage = "User not found: " + root.username
-            } else {
-                root.hasError = true
-                root.errorMessage = msg
+        try {
+            var cacheData = {
+                events: root.rawEvents,
+                following: root.followingList,
+                timestamp: Math.floor(Date.now() / 1000)
             }
-            return true
+            eventsCacheFile.setText(JSON.stringify(cacheData, null, 2))
+            logDebug("Cache saved with " + root.rawEvents.length + " events")
+        } catch (e) {
+            Logger.e("GitHubFeed", "Failed to save cache: " + e)
         }
-        return false
     }
+
+    property int followingPage: 1
+    property var allFollowingUsers: []
 
     Process {
         id: followingProcess
 
-        command: root.username ? buildCurlCommand("https://api.github.com/users/" + root.username.trim() + "/following?per_page=100") : ["echo", ""]
+        property int page: 1
+
+        command: root.username && root.token ? [
+            "curl", "-s", "--max-time", "30",
+            "-H", "Authorization: Bearer " + root.token,
+            "-H", "Accept: application/vnd.github.v3+json",
+            "https://api.github.com/users/" + root.username + "/following?per_page=100&page=" + page
+        ] : ["echo", "[]"]
 
         stdout: StdioCollector {
             onStreamFinished: {
@@ -180,36 +181,456 @@ Item {
         stderr: StdioCollector {}
     }
 
-    property var receivedEventsPages: []
-    property int currentReceivedEventsPage: 1
-    readonly property int maxReceivedEventsPages: 3
+    function handleFollowingResponse(responseText) {
+        try {
+            var users = JSON.parse(responseText)
 
-    Process {
-        id: receivedEventsProcess
-
-        property int page: 1
-
-        stdout: StdioCollector {
-            onStreamFinished: {
-                handleReceivedEventsResponse(this.text, receivedEventsProcess.page)
+            if (!Array.isArray(users)) {
+                if (users.message) {
+                    Logger.e("GitHubFeed", "Following API error: " + users.message)
+                    root.hasError = true
+                    root.errorMessage = users.message
+                }
+                finishFollowingFetch()
+                return
             }
+
+            users.forEach(function(u) {
+                if (u && u.login) {
+                    root.allFollowingUsers.push(u.login)
+                }
+            })
+
+            if (users.length === 100) {
+                followingProcess.page++
+                logDebug("Fetching following page " + followingProcess.page + " (got " + root.allFollowingUsers.length + " so far)")
+                followingProcess.running = true
+            } else {
+                finishFollowingFetch()
+            }
+
+        } catch (e) {
+            Logger.e("GitHubFeed", "Failed to parse following response: " + e)
+            finishFollowingFetch()
+        }
+    }
+
+    function finishFollowingFetch() {
+        root.followingList = root.allFollowingUsers
+        Logger.i("GitHubFeed", "Following " + root.followingList.length + " users")
+
+        if (root.followingList.length === 0) {
+            Logger.w("GitHubFeed", "No following users found")
+            fetchMyRepoEvents()
+            return
         }
 
+        root.userBatches = []
+        for (var i = 0; i < root.followingList.length; i += root.batchSize) {
+            root.userBatches.push(root.followingList.slice(i, i + root.batchSize))
+        }
+
+        root.totalBatches = root.userBatches.length
+        root.completedBatches = 0
+        root.collectedEvents = []
+        root.totalGraphQLCost = 0
+        root.fetchStartTime = Date.now()
+
+        root.batchQueue = []
+        for (var j = 0; j < root.totalBatches; j++) {
+            root.batchQueue.push({ index: j, retryCount: 0 })
+        }
+
+        Logger.i("GitHubFeed", "Starting parallel fetch: " + root.totalBatches + " batches, " + root.parallelCount + " parallel")
+
+        startParallelFetches()
+    }
+
+    function startParallelFetches() {
+        var workers = [worker0, worker1, worker2, worker3, worker4, worker5]
+        for (var i = 0; i < root.parallelCount; i++) {
+            assignNextBatch(workers[i])
+        }
+    }
+
+    function assignNextBatch(worker) {
+        if (root.batchQueue.length === 0) {
+            checkAllBatchesComplete()
+            return
+        }
+
+        var batchInfo = root.batchQueue.shift()
+        var batch = root.userBatches[batchInfo.index]
+
+        worker.batchIndex = batchInfo.index
+        worker.retryCount = batchInfo.retryCount
+        worker.command = buildBatchCommand(batch)
+        worker.running = true
+    }
+
+    function buildBatchCommand(batch) {
+        var query = "query {"
+
+        for (var i = 0; i < batch.length; i++) {
+            var user = batch[i]
+            query += " u" + i + ": user(login: \"" + user + "\") {"
+            query += " login avatarUrl"
+            query += " starredRepositories(first: " + root.maxStarsPerUser + ", orderBy: {field: STARRED_AT, direction: DESC}) {"
+            query += " nodes { nameWithOwner description }"
+            query += " edges { starredAt }"
+            query += " }"
+            query += " repositories(first: " + root.maxReposPerUser + ", orderBy: {field: CREATED_AT, direction: DESC}, isFork: false, privacy: PUBLIC) {"
+            query += " nodes { nameWithOwner createdAt description }"
+            query += " }"
+            query += " forkedRepos: repositories(first: " + root.maxForksPerUser + ", orderBy: {field: CREATED_AT, direction: DESC}, isFork: true, privacy: PUBLIC) {"
+            query += " nodes { nameWithOwner createdAt description parent { nameWithOwner } }"
+            query += " }"
+            query += " pullRequests(first: " + root.maxPRsPerUser + ", orderBy: {field: CREATED_AT, direction: DESC}, states: [OPEN, MERGED]) {"
+            query += " nodes { title createdAt state repository { nameWithOwner } }"
+            query += " }"
+            query += " }"
+        }
+
+        query += " rateLimit { cost remaining } }"
+
+        var payload = JSON.stringify({ query: query })
+
+        return [
+            "curl", "-s", "--max-time", "20",
+            "-X", "POST",
+            "https://api.github.com/graphql",
+            "-H", "Authorization: Bearer " + root.token,
+            "-H", "Content-Type: application/json",
+            "-d", payload
+        ]
+    }
+
+    function handleWorkerResponse(worker, responseText) {
+        var batchIndex = worker.batchIndex
+        var retryCount = worker.retryCount
+
+        var success = false
+        var shouldRetry = false
+
+        try {
+            if (!responseText || responseText.trim() === "") {
+                Logger.w("GitHubFeed", "Batch " + (batchIndex + 1) + " empty response")
+                shouldRetry = true
+            } else if (!responseText.trim().startsWith("{")) {
+                Logger.w("GitHubFeed", "Batch " + (batchIndex + 1) + " non-JSON response")
+                shouldRetry = true
+            } else {
+                var result = JSON.parse(responseText)
+
+                if (result.data && result.data.rateLimit) {
+                    root.totalGraphQLCost += result.data.rateLimit.cost || 0
+                }
+
+                if (!result.data) {
+                    Logger.w("GitHubFeed", "Batch " + (batchIndex + 1) + " no data field")
+                    shouldRetry = true
+                } else {
+                    processBatchData(result.data)
+                    success = true
+                    root.completedBatches++
+
+                    var progress = Math.min(root.completedBatches * root.batchSize, root.followingList.length)
+                    logDebug("Batch " + (batchIndex + 1) + "/" + root.totalBatches +
+                        " done: " + progress + "/" + root.followingList.length + " users, events=" + root.collectedEvents.length)
+                }
+            }
+        } catch (e) {
+            Logger.e("GitHubFeed", "Batch " + (batchIndex + 1) + " parse error: " + e)
+            shouldRetry = true
+        }
+
+        if (shouldRetry && retryCount < root.maxRetries) {
+            logDebug("Batch " + (batchIndex + 1) + " retry " + (retryCount + 1) + "/" + root.maxRetries)
+            root.batchQueue.push({ index: batchIndex, retryCount: retryCount + 1 })
+        } else if (!success) {
+            Logger.e("GitHubFeed", "Batch " + (batchIndex + 1) + " failed after " + retryCount + " retries")
+            root.completedBatches++
+        }
+
+        assignNextBatch(worker)
+    }
+
+    function processBatchData(data) {
+        var keys = Object.keys(data).filter(function(k) { return k.startsWith("u") })
+
+        keys.forEach(function(key) {
+            var userData = data[key]
+            if (!userData || !userData.login) return
+
+            var login = userData.login
+            var avatarUrl = userData.avatarUrl || ""
+
+            if (userData.starredRepositories && userData.starredRepositories.nodes && userData.starredRepositories.edges) {
+                var nodes = userData.starredRepositories.nodes
+                var edges = userData.starredRepositories.edges
+
+                for (var i = 0; i < nodes.length && i < edges.length; i++) {
+                    if (!nodes[i] || !edges[i] || !edges[i].starredAt) continue
+
+                    root.collectedEvents.push({
+                        id: "star_" + login + "_" + nodes[i].nameWithOwner + "_" + edges[i].starredAt,
+                        type: "WatchEvent",
+                        created_at: edges[i].starredAt,
+                        actor: { login: login, avatar_url: avatarUrl },
+                        repo: { name: nodes[i].nameWithOwner },
+                        isFollowedUserEvent: true,
+                        payload: { action: "started" },
+                        description: nodes[i].description || ""
+                    })
+                }
+            }
+
+            if (userData.repositories && userData.repositories.nodes) {
+                userData.repositories.nodes.forEach(function(repo) {
+                    if (!repo || !repo.createdAt || !repo.nameWithOwner) return
+
+                    root.collectedEvents.push({
+                        id: "repo_" + login + "_" + repo.nameWithOwner,
+                        type: "CreateEvent",
+                        created_at: repo.createdAt,
+                        actor: { login: login, avatar_url: avatarUrl },
+                        repo: { name: repo.nameWithOwner },
+                        isFollowedUserEvent: true,
+                        payload: { ref_type: "repository" },
+                        description: repo.description || ""
+                    })
+                })
+            }
+
+            if (userData.forkedRepos && userData.forkedRepos.nodes) {
+                userData.forkedRepos.nodes.forEach(function(repo) {
+                    if (!repo || !repo.createdAt || !repo.nameWithOwner) return
+
+                    var parentRepo = repo.parent ? repo.parent.nameWithOwner : ""
+                    root.collectedEvents.push({
+                        id: "fork_" + login + "_" + repo.nameWithOwner,
+                        type: "ForkEvent",
+                        created_at: repo.createdAt,
+                        actor: { login: login, avatar_url: avatarUrl },
+                        repo: { name: parentRepo || repo.nameWithOwner },
+                        isFollowedUserEvent: true,
+                        payload: { forkee: { full_name: repo.nameWithOwner } },
+                        description: repo.description || ""
+                    })
+                })
+            }
+
+            if (userData.pullRequests && userData.pullRequests.nodes) {
+                userData.pullRequests.nodes.forEach(function(pr) {
+                    if (!pr || !pr.createdAt || !pr.repository) return
+
+                    root.collectedEvents.push({
+                        id: "pr_" + login + "_" + pr.repository.nameWithOwner + "_" + pr.createdAt,
+                        type: "PullRequestEvent",
+                        created_at: pr.createdAt,
+                        actor: { login: login, avatar_url: avatarUrl },
+                        repo: { name: pr.repository.nameWithOwner },
+                        isFollowedUserEvent: true,
+                        payload: { action: pr.state === "MERGED" ? "merged" : "opened", pull_request: { title: pr.title } },
+                        description: pr.title || ""
+                    })
+                })
+            }
+        })
+    }
+
+    function checkAllBatchesComplete() {
+        if (root.completedBatches >= root.totalBatches && root.batchQueue.length === 0) {
+            fetchMyRepoEvents()
+        }
+    }
+
+    Process {
+        id: worker0
+        property int batchIndex: -1
+        property int retryCount: 0
+        stdout: StdioCollector {
+            onStreamFinished: { handleWorkerResponse(worker0, this.text) }
+        }
         stderr: StdioCollector {}
     }
 
     Process {
-        id: userReposProcess
+        id: worker1
+        property int batchIndex: -1
+        property int retryCount: 0
+        stdout: StdioCollector {
+            onStreamFinished: { handleWorkerResponse(worker1, this.text) }
+        }
+        stderr: StdioCollector {}
+    }
 
-        command: root.username ? buildCurlCommand("https://api.github.com/users/" + root.username.trim() + "/repos?per_page=10&sort=updated") : ["echo", ""]
+    Process {
+        id: worker2
+        property int batchIndex: -1
+        property int retryCount: 0
+        stdout: StdioCollector {
+            onStreamFinished: { handleWorkerResponse(worker2, this.text) }
+        }
+        stderr: StdioCollector {}
+    }
+
+    Process {
+        id: worker3
+        property int batchIndex: -1
+        property int retryCount: 0
+        stdout: StdioCollector {
+            onStreamFinished: { handleWorkerResponse(worker3, this.text) }
+        }
+        stderr: StdioCollector {}
+    }
+
+    Process {
+        id: worker4
+        property int batchIndex: -1
+        property int retryCount: 0
+        stdout: StdioCollector {
+            onStreamFinished: { handleWorkerResponse(worker4, this.text) }
+        }
+        stderr: StdioCollector {}
+    }
+
+    Process {
+        id: worker5
+        property int batchIndex: -1
+        property int retryCount: 0
+        stdout: StdioCollector {
+            onStreamFinished: { handleWorkerResponse(worker5, this.text) }
+        }
+        stderr: StdioCollector {}
+    }
+
+    Process {
+        id: myReposProcess
 
         stdout: StdioCollector {
             onStreamFinished: {
-                handleUserReposResponse(this.text)
+                handleMyReposResponse(this.text)
             }
         }
 
         stderr: StdioCollector {}
+
+        onExited: function(exitCode, exitStatus) {
+            if (exitCode !== 0) {
+                finalizeFetch()
+            }
+        }
+    }
+
+    function fetchMyRepoEvents() {
+        if (!root.showMyRepoStars && !root.showMyRepoForks) {
+            finalizeFetch()
+            return
+        }
+
+        logDebug("Fetching stars/forks on your repos")
+
+        var query = "query {"
+        query += " user(login: \"" + root.username + "\") {"
+        query += " repositories(first: 10, orderBy: {field: STARGAZERS, direction: DESC}, privacy: PUBLIC) {"
+        query += " nodes {"
+        query += " nameWithOwner"
+        query += " stargazers(first: 5, orderBy: {field: STARRED_AT, direction: DESC}) {"
+        query += " edges { starredAt node { login avatarUrl } }"
+        query += " }"
+        query += " forks(first: 5, orderBy: {field: CREATED_AT, direction: DESC}) {"
+        query += " nodes { owner { login avatarUrl } createdAt }"
+        query += " }"
+        query += " }"
+        query += " }"
+        query += " }"
+        query += " rateLimit { cost remaining }"
+        query += " }"
+
+        var payload = JSON.stringify({ query: query })
+
+        myReposProcess.command = [
+            "curl", "-s", "--max-time", "20",
+            "-X", "POST",
+            "https://api.github.com/graphql",
+            "-H", "Authorization: Bearer " + root.token,
+            "-H", "Content-Type: application/json",
+            "-d", payload
+        ]
+
+        myReposProcess.running = true
+    }
+
+    function handleMyReposResponse(responseText) {
+        try {
+            if (!responseText || responseText.trim() === "" || !responseText.trim().startsWith("{")) {
+                Logger.w("GitHubFeed", "My repos response invalid")
+                finalizeFetch()
+                return
+            }
+
+            var result = JSON.parse(responseText)
+
+            if (result.data && result.data.rateLimit) {
+                root.totalGraphQLCost += result.data.rateLimit.cost || 0
+            }
+
+            if (!result.data || !result.data.user || !result.data.user.repositories) {
+                Logger.w("GitHubFeed", "No data for your repos")
+                finalizeFetch()
+                return
+            }
+
+            var repos = result.data.user.repositories.nodes || []
+
+            repos.forEach(function(repo) {
+                if (!repo || !repo.nameWithOwner) return
+
+                if (repo.stargazers && repo.stargazers.edges) {
+                    repo.stargazers.edges.forEach(function(edge) {
+                        if (!edge || !edge.node || !edge.starredAt) return
+                        if (edge.node.login === root.username) return
+
+                        root.collectedEvents.push({
+                            id: "myrepo_star_" + edge.node.login + "_" + repo.nameWithOwner + "_" + edge.starredAt,
+                            type: "WatchEvent",
+                            created_at: edge.starredAt,
+                            actor: { login: edge.node.login, avatar_url: edge.node.avatarUrl || "" },
+                            repo: { name: repo.nameWithOwner },
+                            isMyRepoEvent: true,
+                            payload: { action: "started" },
+                            description: ""
+                        })
+                    })
+                }
+
+                if (repo.forks && repo.forks.nodes) {
+                    repo.forks.nodes.forEach(function(fork) {
+                        if (!fork || !fork.owner || !fork.createdAt) return
+                        if (fork.owner.login === root.username) return
+
+                        root.collectedEvents.push({
+                            id: "myrepo_fork_" + fork.owner.login + "_" + repo.nameWithOwner + "_" + fork.createdAt,
+                            type: "ForkEvent",
+                            created_at: fork.createdAt,
+                            actor: { login: fork.owner.login, avatar_url: fork.owner.avatarUrl || "" },
+                            repo: { name: repo.nameWithOwner },
+                            isMyRepoEvent: true,
+                            payload: {},
+                            description: ""
+                        })
+                    })
+                }
+            })
+
+            logDebug("Processed stars/forks on your repos, total events: " + root.collectedEvents.length)
+
+        } catch (e) {
+            Logger.e("GitHubFeed", "Failed to parse my repos response: " + e)
+        }
+
+        finalizeFetch()
     }
 
     function fetchFromGitHub() {
@@ -220,251 +641,36 @@ Item {
             return
         }
 
-        if (root.isLoading) {
-            Logger.d("GitHubFeed", "Already fetching, skipping")
+        if (!root.token || root.token.trim() === "") {
+            Logger.w("GitHubFeed", "No token configured")
+            root.hasError = true
+            root.errorMessage = "Please add a GitHub Personal Access Token in settings"
             return
         }
 
-        Logger.i("GitHubFeed", "Fetching events for user:", root.username)
+        if (root.isLoading) {
+            logDebug("Already fetching, skipping")
+            return
+        }
+
+        Logger.i("GitHubFeed", "Fetching feed for user: " + root.username)
         root.isLoading = true
         root.hasError = false
         root.errorMessage = ""
-        root.receivedEvents = []
-        root.receivedEventsPages = []
-        root.myRepoEvents = []
-        root.userRepos = []
-        root.currentReceivedEventsPage = 1
-        root.pendingFetches = 3
+        root.collectedEvents = []
+        root.allFollowingUsers = []
+        root.userBatches = []
+        root.batchQueue = []
+        root.completedBatches = 0
+        root.totalBatches = 0
+        root.totalGraphQLCost = 0
 
+        followingProcess.page = 1
         followingProcess.running = true
-        receivedEventsProcess.page = 1
-        receivedEventsProcess.command = buildCurlCommand("https://api.github.com/users/" + root.username.trim() + "/received_events?per_page=100&page=1")
-        receivedEventsProcess.running = true
-        userReposProcess.running = true
-    }
-
-    function handleFollowingResponse(responseText) {
-        root.pendingFetches--
-
-        if (!responseText || responseText.trim() === "") {
-            Logger.w("GitHubFeed", "Empty following response")
-            checkAllFetchesComplete()
-            return
-        }
-
-        try {
-            var data = JSON.parse(responseText)
-
-            if (handleApiError(data, "Following")) {
-                checkAllFetchesComplete()
-                return
-            }
-
-            if (!Array.isArray(data)) {
-                Logger.e("GitHubFeed", "Expected array for following")
-                checkAllFetchesComplete()
-                return
-            }
-
-            root.followingList = data.map(function(user) {
-                return user.login.toLowerCase()
-            })
-
-            Logger.i("GitHubFeed", "Fetched " + root.followingList.length + " following")
-            checkAllFetchesComplete()
-        } catch (e) {
-            Logger.e("GitHubFeed", "JSON parse error for following:", e)
-            checkAllFetchesComplete()
-        }
-    }
-
-    function handleReceivedEventsResponse(responseText, page) {
-        if (!responseText || responseText.trim() === "") {
-            Logger.w("GitHubFeed", "Empty received_events response for page " + page)
-            root.pendingFetches--
-            checkAllFetchesComplete()
-            return
-        }
-
-        try {
-            var data = JSON.parse(responseText)
-
-            if (handleApiError(data, "Received events")) {
-                root.pendingFetches--
-                checkAllFetchesComplete()
-                return
-            }
-
-            if (!Array.isArray(data)) {
-                Logger.e("GitHubFeed", "Expected array for received_events")
-                root.pendingFetches--
-                checkAllFetchesComplete()
-                return
-            }
-
-            root.receivedEventsPages = root.receivedEventsPages.concat(data)
-            Logger.i("GitHubFeed", "Fetched page " + page + ": " + data.length + " events (total: " + root.receivedEventsPages.length + ")")
-
-            if (page < root.maxReceivedEventsPages && data.length > 0) {
-                root.currentReceivedEventsPage = page + 1
-                receivedEventsProcess.page = page + 1
-                receivedEventsProcess.command = buildCurlCommand("https://api.github.com/users/" + root.username.trim() + "/received_events?per_page=100&page=" + (page + 1))
-                receivedEventsProcess.running = true
-            } else {
-                root.receivedEvents = root.receivedEventsPages
-                Logger.i("GitHubFeed", "All received_events pages fetched, total: " + root.receivedEvents.length)
-                root.pendingFetches--
-                checkAllFetchesComplete()
-            }
-        } catch (e) {
-            Logger.e("GitHubFeed", "JSON parse error for received_events:", e)
-            root.pendingFetches--
-            checkAllFetchesComplete()
-        }
-    }
-
-    function handleUserReposResponse(responseText) {
-        root.pendingFetches--
-
-        if (!responseText || responseText.trim() === "") {
-            Logger.w("GitHubFeed", "Empty user repos response")
-            checkAllFetchesComplete()
-            return
-        }
-
-        try {
-            var data = JSON.parse(responseText)
-
-            if (handleApiError(data, "User repos")) {
-                checkAllFetchesComplete()
-                return
-            }
-
-            if (!Array.isArray(data)) {
-                Logger.e("GitHubFeed", "Expected array for user repos")
-                checkAllFetchesComplete()
-                return
-            }
-
-            root.userRepos = data
-            Logger.i("GitHubFeed", "Fetched " + data.length + " user repos")
-
-            if (data.length > 0) {
-                fetchMyRepoEvents()
-            } else {
-                checkAllFetchesComplete()
-            }
-        } catch (e) {
-            Logger.e("GitHubFeed", "JSON parse error for user repos:", e)
-            checkAllFetchesComplete()
-        }
-    }
-
-    property int pendingRepoEventFetches: 0
-    property var repoEventQueue: []
-
-    function fetchMyRepoEvents() {
-        var reposToFetch = Math.min(root.userRepos.length, 5)
-        root.pendingRepoEventFetches = reposToFetch
-        root.repoEventQueue = []
-
-        for (var i = 0; i < reposToFetch; i++) {
-            root.repoEventQueue.push(root.userRepos[i].full_name)
-        }
-
-        fetchNextRepoEvents()
-    }
-
-    function fetchNextRepoEvents() {
-        if (root.repoEventQueue.length === 0) {
-            return
-        }
-
-        var repoName = root.repoEventQueue.shift()
-        repoEventsProcess.repoName = repoName
-        repoEventsProcess.command = buildCurlCommand("https://api.github.com/repos/" + repoName + "/events?per_page=30")
-        repoEventsProcess.running = true
-    }
-
-    Process {
-        id: repoEventsProcess
-        property string repoName: ""
-
-        stdout: StdioCollector {
-            onStreamFinished: {
-                handleRepoEventsResponse(this.text, repoEventsProcess.repoName)
-            }
-        }
-
-        stderr: StdioCollector {}
-
-        onExited: function(exitCode, exitStatus) {
-            root.pendingRepoEventFetches--
-
-            if (root.repoEventQueue.length > 0) {
-                fetchNextRepoEvents()
-            } else if (root.pendingRepoEventFetches <= 0) {
-                checkAllFetchesComplete()
-            }
-        }
-    }
-
-    function handleRepoEventsResponse(responseText, repoName) {
-        if (!responseText || responseText.trim() === "") {
-            return
-        }
-
-        try {
-            var data = JSON.parse(responseText)
-
-            if (Array.isArray(data)) {
-                var starForkEvents = data.filter(function(event) {
-                    if (event.actor && event.actor.login.toLowerCase() === root.username.toLowerCase()) {
-                        return false
-                    }
-                    return event.type === "WatchEvent" || event.type === "ForkEvent"
-                })
-
-                starForkEvents.forEach(function(event) {
-                    event.isMyRepoEvent = true
-                    event.myRepoName = repoName
-                })
-
-                root.myRepoEvents = root.myRepoEvents.concat(starForkEvents)
-                Logger.d("GitHubFeed", "Found " + starForkEvents.length + " star/fork events on " + repoName)
-            }
-        } catch (e) {
-            Logger.w("GitHubFeed", "Failed to parse repo events for " + repoName + ":", e)
-        }
-    }
-
-    function checkAllFetchesComplete() {
-        if (root.pendingFetches > 0 || root.pendingRepoEventFetches > 0) {
-            return
-        }
-
-        finalizeFetch()
     }
 
     function finalizeFetch() {
-        var followingSet = {}
-        for (var i = 0; i < root.followingList.length; i++) {
-            followingSet[root.followingList[i]] = true
-        }
-
-        var filteredReceivedEvents = root.receivedEvents.filter(function(event) {
-            if (!event.actor || !event.actor.login) {
-                return false
-            }
-            var actorLogin = event.actor.login.toLowerCase()
-            return followingSet[actorLogin] === true
-        })
-
-        Logger.i("GitHubFeed", "Filtered to " + filteredReceivedEvents.length + " events from followed users (from " + root.receivedEvents.length + " total)")
-
-        var allEvents = filteredReceivedEvents.concat(root.myRepoEvents)
-
-        allEvents.sort(function(a, b) {
+        root.collectedEvents.sort(function(a, b) {
             var dateA = new Date(a.created_at)
             var dateB = new Date(b.created_at)
             return dateB - dateA
@@ -472,8 +678,8 @@ Item {
 
         var seen = {}
         var uniqueEvents = []
-        for (var j = 0; j < allEvents.length; j++) {
-            var event = allEvents[j]
+        for (var i = 0; i < root.collectedEvents.length; i++) {
+            var event = root.collectedEvents[i]
             if (!seen[event.id]) {
                 seen[event.id] = true
                 uniqueEvents.push(event)
@@ -485,10 +691,19 @@ Item {
         root.isLoading = false
         root.hasError = false
 
-        Logger.i("GitHubFeed", "Raw events: " + root.rawEvents.length + ", Filtered: " + root.events.length)
+        var byType = {}
+        uniqueEvents.forEach(function(e) {
+            var key = e.isMyRepoEvent ? "MyRepo:" + e.type : e.type
+            byType[key] = (byType[key] || 0) + 1
+        })
+
+        var totalTime = ((Date.now() - root.fetchStartTime) / 1000).toFixed(1)
+        Logger.i("GitHubFeed", "Fetch complete: " + uniqueEvents.length + " events from " +
+            root.followingList.length + " users in " + totalTime + "s, GraphQL cost: " + root.totalGraphQLCost)
+        logDebug("Events by type: " + JSON.stringify(byType))
 
         saveToCache()
-        downloadAvatars(root.rawEvents)
+        downloadAvatars(root.events)
     }
 
     property var pendingAvatars: []
@@ -508,7 +723,6 @@ Item {
                 var newAvatars = root.availableAvatars
                 newAvatars[currentUserId] = true
                 root.availableAvatars = newAvatars
-                Logger.d("GitHubFeed", "Avatar downloaded for user:", currentUserId)
             }
             root.isDownloadingAvatar = false
             downloadNextAvatar()
@@ -520,19 +734,19 @@ Item {
 
         for (var i = 0; i < events.length; i++) {
             var event = events[i]
-            if (event.actor && event.actor.id && event.actor.avatar_url) {
-                var userId = String(event.actor.id)
-                if (!seenUsers[userId]) {
-                    seenUsers[userId] = true
+            if (event.actor && event.actor.login && event.actor.avatar_url) {
+                var oderId = event.actor.login
+                if (!seenUsers[oderId]) {
+                    seenUsers[oderId] = true
                     root.pendingAvatars.push({
-                        id: userId,
+                        id: event.actor.login,
                         url: event.actor.avatar_url
                     })
                 }
             }
         }
 
-        if (!root.isDownloadingAvatar) {
+        if (!root.isDownloadingAvatar && root.pendingAvatars.length > 0) {
             downloadNextAvatar()
         }
     }
@@ -570,7 +784,7 @@ Item {
                 avatarDownloadProcess.currentUserId = avatarId
                 avatarDownloadProcess.currentUrl = avatarUrl
                 avatarDownloadProcess.command = [
-                    "curl", "-s", "-L",
+                    "curl", "-s", "-L", "--max-time", "10",
                     "-o", avatarPath,
                     avatarUrl + "&s=80"
                 ]
@@ -579,22 +793,21 @@ Item {
         }
     }
 
-    function getAvatarPath(actorId) {
-        if (!actorId) return ""
-        var id = String(actorId)
-        if (!root.availableAvatars[id]) return ""
-        return "file://" + root.avatarsDir + "/" + id + ".png"
+    function getAvatarPath(actorLogin) {
+        if (!actorLogin) return ""
+        if (!root.availableAvatars[actorLogin]) return ""
+        return "file://" + root.avatarsDir + "/" + actorLogin + ".png"
     }
 
     Timer {
         id: refreshTimer
         interval: root.refreshInterval * 1000
-        running: root.username !== ""
+        running: root.username !== "" && root.token !== ""
         repeat: true
         triggeredOnStart: false
 
         onTriggered: {
-            Logger.d("GitHubFeed", "Timer triggered, checking if refresh needed")
+            logDebug("Timer triggered, checking if refresh needed")
             var now = Math.floor(Date.now() / 1000)
             var age = now - root.lastFetchTimestamp
 
@@ -636,10 +849,15 @@ Item {
     }
 
     Component.onCompleted: {
-        Logger.i("GitHubFeed", "Main component initialized")
+        Logger.i("GitHubFeed", "Plugin initialized (parallel GraphQL fetching)")
 
         if (!root.username) {
             Logger.w("GitHubFeed", "No username configured")
+            return
+        }
+
+        if (!root.token) {
+            Logger.w("GitHubFeed", "No token configured")
             return
         }
 
@@ -673,8 +891,8 @@ Item {
                     }
                 }
                 root.availableAvatars = avatars
-                Logger.d("GitHubFeed", "Scanned " + Object.keys(avatars).length + " existing avatars")
-                eventsCacheFile.reload()
+                logDebug("Scanned " + Object.keys(avatars).length + " existing avatars")
+                cacheExistsCheck.running = true
             }
         }
 
@@ -682,13 +900,29 @@ Item {
 
         onExited: function(exitCode, exitStatus) {
             if (exitCode !== 0) {
+                cacheExistsCheck.running = true
+            }
+        }
+    }
+
+    Process {
+        id: cacheExistsCheck
+        command: ["test", "-f", root.eventsCachePath]
+
+        onExited: function(exitCode, exitStatus) {
+            if (exitCode === 0) {
                 eventsCacheFile.reload()
+            } else {
+                logDebug("No cache file, fetching fresh data")
+                if (root.username && root.token) {
+                    fetchFromGitHub()
+                }
             }
         }
     }
 
     onUsernameChanged: {
-        if (root.username) {
+        if (root.username && root.token) {
             Logger.i("GitHubFeed", "Username changed, fetching new data")
             root.rawEvents = []
             root.followingList = []

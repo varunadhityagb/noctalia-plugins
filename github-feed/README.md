@@ -1,134 +1,151 @@
 # GitHub Feed Plugin for Noctalia
 
-Plugin that displays your GitHub activity feed, similar to the GitHub dashboard. Shows activity from people you follow and stars/forks on your repositories.
+Display GitHub activity from users you follow and activity on your own repositories.
 
 ## Features
 
-- Activity from users you follow (stars, forks, PRs, issues, comments, releases)
-- Stars and forks on your own repositories
-- Cached avatars
-- Configurable refresh interval
-- Event type filtering
+**Activity from Followed Users:**
+- Stars - repos they starred
+- Forks - repos they forked
+- Pull Requests - PRs they opened/merged
+- Repository Creations - new repos they created
 
-## Installation
+**Activity on Your Repos:**
+- Stars - when someone stars your repo
+- Forks - when someone forks your repo
 
-Copy the `github-feed` folder to your noctalia plugins directory:
+**Technical:**
+- Parallel GraphQL fetching for 5-6x faster load times
+- Queries ALL followed users efficiently
+- Automatic retry on transient failures
+- Caches results to minimize API calls
+- Displays user avatars
+- Click events to open in browser
 
-```
-~/.config/noctalia/plugins/github-feed/
-```
+## Requirements
+
+- GitHub Personal Access Token with `read:user` scope
+- Create one at: https://github.com/settings/tokens
 
 ## Configuration
 
-Open the plugin settings in noctalia to configure:
+1. Open Noctalia settings
+2. Navigate to the GitHub Feed plugin
+3. Enter your GitHub username
+4. Enter your Personal Access Token
+5. Toggle which event types to show
+6. Adjust refresh interval and maximum events as needed
 
-- **Username**: Your GitHub username (required)
-- **Token**: Personal access token for higher rate limits (optional but recommended)
-- **Refresh Interval**: How often to check for new events
-- **Event Types**: Toggle which events to show
+## How It Works
 
-### Getting a Token
+### Parallel GraphQL Fetching
 
-Without a token, GitHub limits you to 60 API requests per hour. With a token, you get 5000.
+The plugin uses GitHub's GraphQL API with parallel requests for maximum speed:
 
-1. Go to https://github.com/settings/tokens
-2. Generate new token (classic)
-3. No special permissions needed
-4. Copy the token to the plugin settings
+1. Fetches your complete following list via REST API
+2. Splits users into batches of 8
+3. Runs 6 parallel GraphQL queries simultaneously
+4. Each query fetches per user:
+   - Last 3 starred repositories
+   - Last 2 created repositories
+   - Last 2 forked repositories
+   - Last 2 pull requests
+5. Automatic retry (up to 3 attempts) on failed requests
+6. Queries your top 10 repos for recent stars and forks
+7. Merges, deduplicates, and sorts events by date
+8. Caches results for the configured refresh interval
 
-## API Usage
+### Performance
 
-The plugin makes around 11 API calls per refresh:
+- **Before (v1.0.7)**: ~128 seconds for 137 users (sequential)
+- **After (v1.1.0)**: ~20 seconds for 137 users (parallel)
+- **Speedup**: 5-6x faster
 
-- 1 call for your following list
-- 3 calls for received_events (pages 1-3, up to 300 events)
-- 1 call for your repos list
-- 5 calls for events on your top 5 repos (to catch stars/forks)
-- Avatar downloads only happen once per user
+### API Usage
 
-With the 30 minute default refresh interval and a token, you will never hit rate limits.
-
-## How it Works
-
-### Fetching Events
-
-The plugin uses GitHub's `received_events` endpoint which returns events from:
-
-- Repositories you watch/star
-- Users you follow
-
-Since this endpoint returns a lot of noise (random people starring repos you watch), the plugin:
-
-1. Fetches your following list
-2. Fetches 3 pages of received_events (300 events max)
-3. Filters to only show events where the actor is someone you follow
-4. Separately fetches stars/forks on your own repos
-
-### Main.qml Structure
-
-```javascript
-// Key properties
-property var events: []              // Final filtered events
-property var receivedEvents: []      // Raw events from API
-property var followingList: []       // Lowercase usernames you follow
-property var myRepoEvents: []        // Stars/forks on your repos
-
-// Fetch flow
-fetchFromGitHub()
-  -> followingProcess (get following list)
-  -> receivedEventsProcess (get events, paginated)
-  -> userReposProcess -> repoEventsProcess (get activity on your repos)
-  -> finalizeFetch() (filter and merge)
-```
-
-### Filtering Logic
-
-```javascript
-// Build set of followed usernames for fast lookup
-var followingSet = {}
-for (var i = 0; i < root.followingList.length; i++) {
-    followingSet[root.followingList[i]] = true
-}
-
-// Only keep events from people you follow
-var filtered = root.receivedEvents.filter(function(event) {
-    var actorLogin = event.actor.login.toLowerCase()
-    return followingSet[actorLogin] === true
-})
-```
-
-### Caching
-
-Events are cached to `cache/events.json` with a timestamp. On startup, cached data is used if it's younger than the refresh interval.
-
-Avatars are downloaded once to `cache/avatars/{user_id}.png` and reused.
+- REST API: 1 request per 100 followed users
+- GraphQL API: ~1 point per batch + 1 point for your repos
+- For 137 followed users: ~20 GraphQL points total
+- Well within GitHub's rate limits (5000 points/hour)
 
 ## IPC Commands
 
-Trigger actions from the command line:
-
+Refresh feed:
 ```bash
-# Refresh the feed
-qs -c noctalia ipc call plugin:github-feed refresh
-
-# Toggle the panel
-qs -c noctalia ipc call plugin:github-feed toggle
-
-# Set username
-qs -c noctalia ipc call plugin:github-feed setUsername "your-username"
+qs -c noctalia-shell ipc call plugin:github-feed refresh
 ```
+
+Toggle panel:
+```bash
+qs -c noctalia-shell ipc call plugin:github-feed toggle
+```
+
+## Event Types
+
+**From Followed Users:**
+- WatchEvent - when they star a repo
+- ForkEvent - when they fork a repo
+- PullRequestEvent - when they open/merge a PR
+- CreateEvent - when they create a new repo
+
+**On Your Repos:**
+- WatchEvent - when someone stars your repo
+- ForkEvent - when someone forks your repo
+
+## Cache
+
+Events are cached in:
+```
+~/.config/noctalia/plugins/github-feed/cache/events.json
+```
+
+Avatars are cached in:
+```
+~/.config/noctalia/plugins/github-feed/cache/avatars/
+```
+
+To force a fresh fetch, delete the cache directory and refresh.
 
 ## Files
 
 ```
 github-feed/
   manifest.json      # Plugin metadata
-  Main.qml           # Core logic, API fetching, caching
+  Main.qml           # Core logic, parallel GraphQL fetching
   BarWidget.qml      # Bar button (GitHub icon)
   Panel.qml          # Popup panel with event list
   Settings.qml       # Configuration UI
-  settings.json      # User settings
   cache/
     events.json      # Cached events
     avatars/         # Cached user avatars
 ```
+
+## Version History
+
+### 1.1.0
+- Parallel GraphQL fetching (6 concurrent requests)
+- 5-6x faster load times (~20s vs ~128s for 137 users)
+- Automatic retry on transient failures (up to 3 attempts)
+- Improved error handling and logging
+
+### 1.0.7
+- Added forks from followed users
+- Added pull requests from followed users
+- Added stars/forks on YOUR repositories
+- Separate toggles for each event type
+- Improved event display formatting
+
+### 1.0.5
+- Complete rewrite using GraphQL batching
+- Queries ALL followed users (previously limited)
+- Simplified to stars and repo creations
+- Improved caching and error handling
+- Fixed avatar loading
+
+### 1.0.3
+- Initial REST API implementation
+- Limited to configurable number of users
+
+## License
+
+MIT

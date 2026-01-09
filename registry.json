@@ -48,9 +48,9 @@
     {
       "id": "github-feed",
       "name": "GitHub Feed",
-      "version": "1.0.0",
+      "version": "1.1.0",
       "author": "linuxmobile",
-      "description": "Display GitHub activity feed with stars, PRs, forks in an overlay panel",
+      "description": "Display GitHub activity from users you follow and activity on your repos",
       "repository": "https://github.com/linuxmobile/github-feed-noctalia",
       "minNoctaliaVersion": "3.6.0",
       "license": "MIT",
@@ -60,12 +60,12 @@
         "Development",
         "Network"
       ],
-      "lastUpdated": "2026-01-06T12:08:53-03:00"
+      "lastUpdated": "2026-01-07T19:30:55-03:00"
     },
     {
       "id": "hello-world",
       "name": "Hello World",
-      "version": "1.0.6",
+      "version": "1.0.7",
       "author": "Noctalia Team <team@noctalia.dev>",
       "description": "A simple Hello World plugin demonstrating functionalities. For developers only.",
       "repository": "https://github.com/noctalia-dev/noctalia-plugins",
@@ -74,7 +74,22 @@
       "tags": [
         "Development"
       ],
-      "lastUpdated": "2026-01-06T23:35:54-05:00"
+      "lastUpdated": "2026-01-07T08:58:45-05:00"
+    },
+    {
+      "id": "kagi-quick-search",
+      "name": "Kagi Quick Search",
+      "version": "1.0.0",
+      "author": "Kainoa Kanter",
+      "description": "Get AI answers from Kagi in your launcher",
+      "repository": "https://github.com/noctalia-dev/noctalia-plugins",
+      "minNoctaliaVersion": "3.8.3",
+      "license": "MIT",
+      "tags": [
+        "Launcher",
+        "Productivity"
+      ],
+      "lastUpdated": "2026-01-08T18:22:34-08:00"
     },
     {
       "id": "kaomoji-provider",
@@ -142,19 +157,19 @@
     {
       "id": "noctalia-supergfxctl",
       "name": "SuperGFX Control",
-      "version": "0.0.2",
+      "version": "0.0.3",
       "author": "cod3d <cod3ddot@proton.me>",
       "description": "GPU control with supergfxctl for noctalia.",
       "repository": "https://github.com/cod3ddot/noctalia-supergfxctl",
-      "minNoctaliaVersion": "3.7.5",
-      "license": "AGPL-3.0-or-later",
+      "minNoctaliaVersion": "3.8.2",
+      "license": "MIT",
       "tags": [
         "Bar",
         "Panel",
         "System",
         "Gaming"
       ],
-      "lastUpdated": "2026-01-04T21:11:31-05:00"
+      "lastUpdated": "2026-01-07T18:04:16-08:00"
     },
     {
       "id": "privacy-indicator",
@@ -186,7 +201,7 @@
     {
       "id": "screen-recorder",
       "name": "Screen Recorder",
-      "version": "1.0.2",
+      "version": "1.0.5",
       "author": "Noctalia Team",
       "description": "Hardware-accelerated screen recording using gpu-screen-recorder with customizable video and audio settings",
       "repository": "https://github.com/noctalia-dev/noctalia-plugins",
@@ -196,7 +211,7 @@
         "Bar",
         "Utility"
       ],
-      "lastUpdated": "2026-01-06T16:25:18+01:00"
+      "lastUpdated": "2026-01-08T20:42:18-05:00"
     },
     {
       "id": "simple-notes",
@@ -217,18 +232,18 @@
     {
       "id": "steam-price-watcher",
       "name": "Steam Price Watcher",
-      "version": "1.0.1",
+      "version": "1.0.2",
       "author": "Lokize",
       "description": "Monitor Steam game prices and get notified when they reach your target price",
       "minNoctaliaVersion": "3.6.0",
       "license": "MIT",
       "tags": [],
-      "lastUpdated": "2026-01-06T15:53:10-03:00"
+      "lastUpdated": "2026-01-08T08:07:26-03:00"
     },
     {
       "id": "todo",
       "name": "Todo List",
-      "version": "1.4.2",
+      "version": "1.6.0",
       "author": "lonerOrz <lonerOrz@qq.com>",
       "description": "A simple todo list manager plugin for Noctalia Shell.",
       "repository": "https://github.com/noctalia-dev/noctalia-plugins",
@@ -240,7 +255,7 @@
         "Panel",
         "Productivity"
       ],
-      "lastUpdated": "2026-01-06T23:05:51-05:00"
+      "lastUpdated": "2026-01-08T02:41:41+08:00"
     },
     {
       "id": "update-count",
@@ -260,14 +275,14 @@
     {
       "id": "world-clock",
       "name": "World Clock",
-      "version": "1.0.0",
+      "version": "1.0.1",
       "author": "Lokize",
       "description": "Display time from multiple timezones around the world with automatic rotation.",
       "repository": "https://github.com/noctalia-dev/noctalia-plugins",
       "minNoctaliaVersion": "3.6.0",
       "license": "MIT",
       "tags": [],
-      "lastUpdated": "2026-01-04T19:48:13-03:00"
+      "lastUpdated": "2026-01-07T22:55:41-03:00"
     }
   ]
 }

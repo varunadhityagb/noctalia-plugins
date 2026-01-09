@@ -65,7 +65,7 @@ Rectangle {
     onClicked: {
       if (pluginApi) {
         Logger.i("HelloWorld", "Opening Hello World panel");
-        pluginApi.openPanel(root.screen);
+        pluginApi.openPanel(root.screen, this);
       }
     }
   }

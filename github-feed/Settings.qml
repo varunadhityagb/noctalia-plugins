@@ -16,8 +16,9 @@ ColumnLayout {
     property bool editShowStars: true
     property bool editShowForks: true
     property bool editShowPRs: true
-    property bool editShowIssues: true
-    property bool editShowPushes: false
+    property bool editShowRepoCreations: true
+    property bool editShowMyRepoStars: true
+    property bool editShowMyRepoForks: true
     property bool editOpenInBrowser: true
 
     spacing: Style.marginM
@@ -37,8 +38,8 @@ ColumnLayout {
 
     NTextInput {
         Layout.fillWidth: true
-        label: "Personal Access Token (Optional)"
-        description: "Increases rate limit from 60 to 5000 requests/hour. Create at github.com/settings/tokens"
+        label: "Personal Access Token (Required)"
+        description: "Required for GraphQL API. Create at github.com/settings/tokens with 'read:user' scope"
         placeholderText: "ghp_xxxxxxxxxxxx"
         text: root.editToken
         onTextChanged: root.editToken = text
@@ -111,8 +112,8 @@ ColumnLayout {
     }
 
     NLabel {
-        label: "Event Types"
-        description: "Choose which events to display in your feed"
+        label: "Activity from Followed Users"
+        description: "Events from people you follow"
     }
 
     GridLayout {
@@ -122,48 +123,69 @@ ColumnLayout {
         rowSpacing: Style.marginS
 
         NToggle {
-            id: starsToggle
             Layout.fillWidth: true
             label: "Stars"
-            description: "Show when repos are starred"
+            description: "Repos they starred"
             checked: root.editShowStars
             onToggled: (checked) => { root.editShowStars = checked }
         }
 
         NToggle {
-            id: forksToggle
             Layout.fillWidth: true
             label: "Forks"
-            description: "Show when repos are forked"
+            description: "Repos they forked"
             checked: root.editShowForks
             onToggled: (checked) => { root.editShowForks = checked }
         }
 
         NToggle {
-            id: prsToggle
             Layout.fillWidth: true
             label: "Pull Requests"
-            description: "Show PR activity"
+            description: "PRs they opened"
             checked: root.editShowPRs
             onToggled: (checked) => { root.editShowPRs = checked }
         }
 
         NToggle {
-            id: issuesToggle
             Layout.fillWidth: true
-            label: "Issues"
-            description: "Show issue activity"
-            checked: root.editShowIssues
-            onToggled: (checked) => { root.editShowIssues = checked }
+            label: "Repo Creations"
+            description: "Repos they created"
+            checked: root.editShowRepoCreations
+            onToggled: (checked) => { root.editShowRepoCreations = checked }
+        }
+    }
+
+    NDivider {
+        Layout.fillWidth: true
+        Layout.topMargin: Style.marginS
+        Layout.bottomMargin: Style.marginS
+    }
+
+    NLabel {
+        label: "Activity on Your Repos"
+        description: "Events on repositories you own"
+    }
+
+    GridLayout {
+        Layout.fillWidth: true
+        columns: 2
+        columnSpacing: Style.marginM
+        rowSpacing: Style.marginS
+
+        NToggle {
+            Layout.fillWidth: true
+            label: "Stars on Your Repos"
+            description: "When someone stars your repo"
+            checked: root.editShowMyRepoStars
+            onToggled: (checked) => { root.editShowMyRepoStars = checked }
         }
 
         NToggle {
-            id: pushesToggle
             Layout.fillWidth: true
-            label: "Pushes"
-            description: "Show push events (can be noisy)"
-            checked: root.editShowPushes
-            onToggled: (checked) => { root.editShowPushes = checked }
+            label: "Forks of Your Repos"
+            description: "When someone forks your repo"
+            checked: root.editShowMyRepoForks
+            onToggled: (checked) => { root.editShowMyRepoForks = checked }
         }
     }
 
@@ -178,7 +200,6 @@ ColumnLayout {
     }
 
     NToggle {
-        id: browserToggle
         Layout.fillWidth: true
         label: "Open in Browser"
         description: "Click on events to open them in your default browser"
@@ -256,8 +277,9 @@ ColumnLayout {
         pluginApi.pluginSettings.showStars = root.editShowStars
         pluginApi.pluginSettings.showForks = root.editShowForks
         pluginApi.pluginSettings.showPRs = root.editShowPRs
-        pluginApi.pluginSettings.showIssues = root.editShowIssues
-        pluginApi.pluginSettings.showPushes = root.editShowPushes
+        pluginApi.pluginSettings.showRepoCreations = root.editShowRepoCreations
+        pluginApi.pluginSettings.showMyRepoStars = root.editShowMyRepoStars
+        pluginApi.pluginSettings.showMyRepoForks = root.editShowMyRepoForks
         pluginApi.pluginSettings.openInBrowser = root.editOpenInBrowser
 
         pluginApi.saveSettings()
@@ -279,8 +301,9 @@ ColumnLayout {
         root.editShowStars = settings?.showStars ?? defaults?.showStars ?? true
         root.editShowForks = settings?.showForks ?? defaults?.showForks ?? true
         root.editShowPRs = settings?.showPRs ?? defaults?.showPRs ?? true
-        root.editShowIssues = settings?.showIssues ?? defaults?.showIssues ?? true
-        root.editShowPushes = settings?.showPushes ?? defaults?.showPushes ?? false
+        root.editShowRepoCreations = settings?.showRepoCreations ?? defaults?.showRepoCreations ?? true
+        root.editShowMyRepoStars = settings?.showMyRepoStars ?? defaults?.showMyRepoStars ?? true
+        root.editShowMyRepoForks = settings?.showMyRepoForks ?? defaults?.showMyRepoForks ?? true
         root.editOpenInBrowser = settings?.openInBrowser ?? defaults?.openInBrowser ?? true
     }
 }

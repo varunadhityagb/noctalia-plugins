@@ -30,21 +30,30 @@ Item {
 
     function formatEventType(event) {
         if (!event || !event.type) return ""
+
         if (event.isMyRepoEvent) {
             if (event.type === "WatchEvent") return "starred your repo"
             if (event.type === "ForkEvent") return "forked your repo"
+            return event.type.replace("Event", "").toLowerCase() + " your repo"
         }
+
+        if (event.isFollowedUserEvent) {
+            switch (event.type) {
+                case "WatchEvent": return "starred"
+                case "ForkEvent": return "forked"
+                case "PullRequestEvent":
+                    var action = event.payload?.action || "opened"
+                    return action + " PR in"
+                case "CreateEvent": return "created repo"
+                default: return event.type.replace("Event", "").toLowerCase()
+            }
+        }
+
         switch (event.type) {
             case "WatchEvent": return "starred"
             case "ForkEvent": return "forked"
-            case "PullRequestEvent": return event.payload?.action || "pull request"
-            case "IssuesEvent": return (event.payload?.action || "issue") + " issue"
-            case "IssueCommentEvent": return "commented on"
-            case "PullRequestReviewEvent": return "reviewed"
-            case "PullRequestReviewCommentEvent": return "review comment on"
-            case "CreateEvent": return "created " + (event.payload?.ref_type || "")
-            case "ReleaseEvent": return "released"
-            case "PushEvent": return "pushed to"
+            case "PullRequestEvent": return event.payload?.action || "opened PR"
+            case "CreateEvent": return "created " + (event.payload?.ref_type || "repo")
             default: return event.type.replace("Event", "").toLowerCase()
         }
     }
@@ -54,31 +63,10 @@ Item {
     }
 
     function getEventDetail(event) {
-        if (!event || !event.payload) return ""
-        switch (event.type) {
-            case "IssueCommentEvent":
-                return event.payload.issue?.title || ""
-            case "IssuesEvent":
-                return event.payload.issue?.title || ""
-            case "PullRequestEvent":
-                return event.payload.pull_request?.title || ""
-            case "PullRequestReviewEvent":
-                return event.payload.pull_request?.title || ""
-            case "PullRequestReviewCommentEvent":
-                return event.payload.pull_request?.title || ""
-            case "CreateEvent":
-                if (event.payload.ref_type === "branch") return event.payload.ref || ""
-                if (event.payload.ref_type === "tag") return event.payload.ref || ""
-                return ""
-            case "ReleaseEvent":
-                return event.payload.release?.tag_name || ""
-            case "PushEvent":
-                var commits = event.payload.commits || []
-                if (commits.length > 0) return commits[0].message?.split("\n")[0] || ""
-                return ""
-            default:
-                return ""
-        }
+        if (!event) return ""
+        if (event.description) return event.description
+        if (event.payload?.pull_request?.title) return event.payload.pull_request.title
+        return ""
     }
 
     function formatRelativeTime(isoString) {
@@ -102,11 +90,10 @@ Item {
 
     function getEventUrl(event) {
         if (!event) return ""
-        if (event.payload?.issue?.html_url) return event.payload.issue.html_url
-        if (event.payload?.pull_request?.html_url) return event.payload.pull_request.html_url
-        if (event.payload?.comment?.html_url) return event.payload.comment.html_url
-        if (event.payload?.release?.html_url) return event.payload.release.html_url
         var repo = event.repo?.name || ""
+        if (event.type === "PullRequestEvent" && event.payload?.pull_request?.html_url) {
+            return event.payload.pull_request.html_url
+        }
         return "https://github.com/" + repo
     }
 
@@ -235,7 +222,7 @@ Item {
 
                     NText {
                         Layout.alignment: Qt.AlignHCenter
-                        text: "No events from followed users"
+                        text: "No recent activity"
                         pointSize: Style.fontSizeM
                         color: Color.mOnSurfaceVariant
                     }
@@ -281,7 +268,7 @@ Item {
                                     Layout.preferredHeight: 36
                                     Layout.alignment: Qt.AlignTop
                                     radius: 18
-                                    imagePath: root.mainInstance ? root.mainInstance.getAvatarPath(eventCard.event?.actor?.id) : ""
+                                    imagePath: root.mainInstance ? root.mainInstance.getAvatarPath(eventCard.event?.actor?.login) : ""
                                     fallbackIcon: "user"
                                 }
 

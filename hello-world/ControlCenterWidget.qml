@@ -10,7 +10,7 @@ NIconButtonHot {
   tooltipText: "Hello World"
   onClicked: {
     if (pluginApi) {
-      pluginApi.togglePanel(screen);
+      pluginApi.togglePanel(screen, this);
     }
   }
 }
