@@ -56,20 +56,23 @@ get_gemini_api_key() {
 get_json_value() {
     local json_file=$1
     local key_path=$2
-    
-    # Convert dot-separated path to jq path
-    local jq_path=$(echo "$key_path" | sed 's/\./\.\["/g' | sed 's/$/"]/' | sed 's/^\.//')
-    local jq_query=".${jq_path}"
-    
-    # Use a more robust approach: split by dots and build path
+
+    # First, try as a flat key (the key might contain literal dots)
+    local flat_result=$(jq -r --arg key "$key_path" '.[$key] // empty' "$json_file" 2>/dev/null)
+    if [[ -n "$flat_result" ]]; then
+        echo "$flat_result"
+        return 0
+    fi
+
+    # Fall back to nested path (treat dots as path separators)
     local -a path_parts
     IFS='.' read -ra path_parts <<< "$key_path"
-    
+
     local jq_filter="."
     for part in "${path_parts[@]}"; do
         jq_filter="${jq_filter}[\"${part}\"]"
     done
-    
+
     jq -r "$jq_filter // empty" "$json_file" 2>/dev/null || echo ""
 }
 
@@ -99,12 +102,30 @@ translate_text() {
     local text=$1
     local target_language=$2
     local api_key=$3
-    
+
     # Escape text for JSON
     local escaped_text=$(echo "$text" | jq -Rs .)
-    
+
+    # Load context file if it exists
+    local context=""
+    local context_file="$SCRIPT_DIR/i18n-context.txt"
+    if [[ -f "$context_file" ]]; then
+        context=$(cat "$context_file")
+    fi
+
     # Prepare the API request
-    local prompt="Translate the following English text to ${target_language}. Return ONLY the translation, no explanations or additional text:\n\n${text}"
+    local prompt="<role>You are a translator for Noctalia, a Linux desktop shell application.</role>
+
+<guidelines>
+${context}
+</guidelines>
+
+<task>
+Translate the INPUT text below from English to ${target_language}.
+IMPORTANT: Output ONLY the translated text. Do NOT include any part of the guidelines, explanations, or formatting. Just the translation.
+</task>
+
+<input>${text}</input>"
     local escaped_prompt=$(echo "$prompt" | jq -Rs .)
     
     local request_body=$(cat <<EOF
@@ -153,27 +174,34 @@ inject_translation() {
     local json_file=$1
     local key_path=$2
     local value=$3
-    
-    # Split key path into array
-    local -a path_parts
-    IFS='.' read -ra path_parts <<< "$key_path"
-    
-    # Build jq path array
-    local jq_path="["
-    for i in "${!path_parts[@]}"; do
-        if [[ $i -gt 0 ]]; then
-            jq_path+=","
-        fi
-        jq_path+="\"${path_parts[$i]}\""
-    done
-    jq_path+="]"
-    
-    # Create a temporary file
+    local ref_file_path="$FOLDER_PATH/$REFERENCE_FILE"
+
+    # Check if this is a flat key in the reference file
+    local is_flat_key=$(jq -r --arg key "$key_path" 'has($key)' "$ref_file_path" 2>/dev/null)
+
     local temp_file=$(mktemp)
-    
-    # Use jq to set the value at the path
-    jq --argjson path "$jq_path" --arg value "$value" 'setpath($path; $value)' "$json_file" > "$temp_file"
-    
+
+    if [[ "$is_flat_key" == "true" ]]; then
+        # Use flat key (key contains literal dots)
+        jq --arg key "$key_path" --arg value "$value" '.[$key] = $value' "$json_file" > "$temp_file"
+    else
+        # Use nested path (treat dots as path separators)
+        local -a path_parts
+        IFS='.' read -ra path_parts <<< "$key_path"
+
+        # Build jq path array
+        local jq_path="["
+        for i in "${!path_parts[@]}"; do
+            if [[ $i -gt 0 ]]; then
+                jq_path+=","
+            fi
+            jq_path+="\"${path_parts[$i]}\""
+        done
+        jq_path+="]"
+
+        jq --argjson path "$jq_path" --arg value "$value" 'setpath($path; $value)' "$json_file" > "$temp_file"
+    fi
+
     if [[ $? -eq 0 ]]; then
         mv "$temp_file" "$json_file"
         return 0
@@ -220,13 +248,14 @@ remove_json_key() {
 # Function to extract all keys from a JSON file recursively
 extract_keys() {
     local json_file=$1
-    
+
     if [[ ! -f "$json_file" ]]; then
         echo "Error: File $json_file not found" >&2
         return 1
     fi
-    
+
     # Extract all keys recursively using jq
+    # Use sort -u to deduplicate keys (in case both flat and nested formats exist)
     jq -r '
         def keys_recursive:
             if type == "object" then
@@ -240,7 +269,7 @@ extract_keys() {
                 empty
             end;
         keys_recursive
-    ' "$json_file" 2>/dev/null | sort
+    ' "$json_file" 2>/dev/null | sort -u
 }
 
 # Function to extract empty keys from a JSON file recursively
@@ -546,7 +575,7 @@ compare_language() {
                         fi
                         
                         # Small delay to avoid rate limiting
-                        sleep 0.5
+                        sleep 0.1
                     fi
                 fi
             done <<< "$missing_keys"

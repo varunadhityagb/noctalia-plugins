@@ -82,6 +82,10 @@ Item {
     function skip() {
       root.pomodoroSkip();
     }
+
+    function stopAlarm() {
+      root.pomodoroStopAlarm();
+    }
   }
 
   readonly property int modeWork: 0
@@ -152,6 +156,12 @@ Item {
   }
 
   function pomodoroStart() {
+    // Stop any playing alarm sound when starting
+    if (root.pomodoroSoundPlaying) {
+      SoundService.stopSound("alarm-beep.wav");
+      root.pomodoroSoundPlaying = false;
+    }
+    
     if (root.pomodoroRemainingSeconds <= 0) {
       root.pomodoroRemainingSeconds = getDurationForMode(root.pomodoroMode);
       root.pomodoroOriginalTotal = root.pomodoroRemainingSeconds;
@@ -197,6 +207,13 @@ Item {
     root.pomodoroSoundPlaying = false;
     
     pomodoroAdvanceToNextPhase();
+  }
+
+  function pomodoroStopAlarm() {
+    if (root.pomodoroSoundPlaying) {
+      SoundService.stopSound("alarm-beep.wav");
+      root.pomodoroSoundPlaying = false;
+    }
   }
 
   function pomodoroSetMode(mode) {

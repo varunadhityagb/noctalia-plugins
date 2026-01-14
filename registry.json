@@ -77,17 +77,6 @@
       "lastUpdated": "2026-01-12T21:18:46-05:00"
     },
     {
-      "id": "hyprland-cheatsheet",
-      "name": "Keybind Cheatsheet (Hyprland)",
-      "version": "1.2.1",
-      "author": "blacku",
-      "description": "Dynamic keyboard shortcuts cheatsheet that reads and displays Hyprland keybindings. Requires Hyprland window manager.",
-      "minNoctaliaVersion": "3.6.0",
-      "license": "MIT",
-      "tags": [],
-      "lastUpdated": "2026-01-07T23:11:45+01:00"
-    },
-    {
       "id": "hyprland-steam-overlay",
       "name": "Steam Overlay (Hyprland)",
       "version": "1.7.0",
@@ -95,8 +84,11 @@
       "description": "Steam overlay with automatic window management for Hyprland..",
       "minNoctaliaVersion": "3.6.0",
       "license": "MIT",
-      "tags": [],
-      "lastUpdated": "2026-01-11T11:27:05-05:00"
+      "tags": [
+        "Gaming",
+        "Hyprland"
+      ],
+      "lastUpdated": "2026-01-13T17:31:46-05:00"
     },
     {
       "id": "kagi-quick-search",
@@ -129,6 +121,17 @@
       "lastUpdated": "2026-01-04T21:11:31-05:00"
     },
     {
+      "id": "keybind-cheatsheet",
+      "name": "Keybind Cheatsheet",
+      "version": "1.3.0",
+      "author": "blacku",
+      "description": "Universal keyboard shortcuts cheatsheet that automatically detects and displays keybindings for Hyprland or Niri compositors.",
+      "minNoctaliaVersion": "3.6.0",
+      "license": "MIT",
+      "tags": [],
+      "lastUpdated": "2026-01-14T00:03:16+01:00"
+    },
+    {
       "id": "mangowc-layout-switcher",
       "name": "Mangowc Layout Switcher",
       "version": "1.1.2",
@@ -140,9 +143,9 @@
       "tags": [
         "Bar",
         "Panel",
-        "Gaming"
+        "MangoWC"
       ],
-      "lastUpdated": "2026-01-04T21:11:31-05:00"
+      "lastUpdated": "2026-01-13T17:31:46-05:00"
     },
     {
       "id": "mini-docker",
@@ -196,7 +199,7 @@
     {
       "id": "pomodoro",
       "name": "Pomodoro",
-      "version": "1.0.0",
+      "version": "1.1.4",
       "author": "notprayasmitra",
       "description": "A pomodoro timer plugin to help boost productivity.",
       "repository": "https://github.com/noctalia-dev/noctalia-plugins",
@@ -206,7 +209,7 @@
         "Bar",
         "Productivity"
       ],
-      "lastUpdated": "2026-01-13T20:14:16+05:30"
+      "lastUpdated": "2026-01-14T22:06:13+05:30"
     },
     {
       "id": "privacy-indicator",
@@ -318,8 +321,10 @@
       "repository": "https://github.com/cleboost/noctalia-translator",
       "minNoctaliaVersion": "1.0.0",
       "license": "MIT",
-      "tags": [],
-      "lastUpdated": "2026-01-13T19:03:02+01:00"
+      "tags": [
+        "Launcher"
+      ],
+      "lastUpdated": "2026-01-13T20:41:44+01:00"
     },
     {
       "id": "unicode-picker",
@@ -332,9 +337,9 @@
       "license": "MIT",
       "tags": [
         "Launcher",
-        "Utilities"
+        "Utility"
       ],
-      "lastUpdated": "2026-01-12T17:50:51+01:00"
+      "lastUpdated": "2026-01-13T17:31:46-05:00"
     },
     {
       "id": "update-count",

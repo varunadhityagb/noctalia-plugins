@@ -6,6 +6,10 @@
   "author": "blacku",
   "license": "MIT",
   "description": "Steam overlay with automatic window management for Hyprland..",
+  "tags": [
+    "Gaming",
+    "Hyprland"
+  ],
   "entryPoints": {
     "main": "Main.qml",
     "barWidget": "BarWidget.qml",

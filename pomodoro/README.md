@@ -12,9 +12,9 @@ A Pomodoro timer plugin for Noctalia for productivity. Happy Coding :)
 - **Auto-start**: Optionally auto-start breaks and/or work sessions.
 - **Compact Mode**: Shorter and more minimal panel view without the progress ring.
 - **Bar Widget**: Shows current mode based on the icon and remaining time with respect to the session.
+- **Notifications**: Sound and toast notification when sessions finish.
 
 ## Work in Progress
-- **Notifications**: Sound and toast notification when sessions finish.
 - **Custom Presets**: Presets that user can create and store locally and select them while starting a pomodoro session.
 - **Custom Sounds**: Custom sounds that user can select or add themselves that will be used to notify when a work/break session ends.
 
@@ -37,6 +37,7 @@ qs -c noctalia-shell ipc call plugin:pomodoro <command>
 | `reset` | Resets the current session | `qs -c noctalia-shell ipc call plugin:pomodoro reset` |
 | `resetAll` | Resets all sessions and returns to work mode | `qs -c noctalia-shell ipc call plugin:pomodoro resetAll` |
 | `skip` | Skips to the next phase (work → break or break → work) | `qs -c noctalia-shell ipc call plugin:pomodoro skip` |
+| `stopAlarm` | Stops the alarm sound when ringing | `qs -c noctalia-shell ipc call plugin:pomodoro stopAlarm` |
 
 ### Examples
 

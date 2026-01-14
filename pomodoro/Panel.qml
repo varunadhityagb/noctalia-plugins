@@ -18,10 +18,20 @@ Item {
 
   readonly property var mainInstance: pluginApi?.mainInstance
 
+  onPluginApiChanged: {
+    // Force re-evaluation of mainInstance binding when pluginApi changes
+    if (pluginApi && pluginApi.mainInstance) {
+      mainInstanceChanged();
+    }
+  }
+
   readonly property bool compactMode: mainInstance ? mainInstance.compactMode : false
   
-  property real contentPreferredWidth: (compactMode ? 340 : 380) * Style.uiScaleRatio
-  property real contentPreferredHeight: (compactMode ? 240 : 360) * Style.uiScaleRatio
+  // Only provide proper dimensions when mainInstance is available to prevent blank panel glitches
+  readonly property bool panelReady: pluginApi !== null && mainInstance !== null && mainInstance !== undefined
+  
+  property real contentPreferredWidth: panelReady ? (compactMode ? 340 : 380) * Style.uiScaleRatio : 0
+  property real contentPreferredHeight: panelReady ? (compactMode ? 240 : 360) * Style.uiScaleRatio : 0
 
   anchors.fill: parent
   
@@ -39,6 +49,7 @@ Item {
   function resetSession() { if (mainInstance) mainInstance.pomodoroResetSession(); }
   function resetAll() { if (mainInstance) mainInstance.pomodoroResetAll(); }
   function skipTimer() { if (mainInstance) mainInstance.pomodoroSkip(); }
+  function stopAlarm() { if (mainInstance) mainInstance.pomodoroStopAlarm(); }
 
   function formatTime(seconds, totalTimeSeconds) {
     const hours = Math.floor(seconds / 3600);
@@ -76,6 +87,7 @@ Item {
     id: panelContainer
     anchors.fill: parent
     color: "transparent"
+    visible: panelReady
 
     ColumnLayout {
       anchors {
@@ -111,6 +123,40 @@ Item {
               font.weight: Style.fontWeightBold
               color: Color.mOnSurface
               Layout.fillWidth: true
+            }
+
+            Item {
+              id: alarmButtonContainer
+              Layout.alignment: Qt.AlignVCenter
+              Layout.preferredWidth: soundPlaying ? (bellIcon.implicitWidth + Style.marginS) : 0
+              Layout.preferredHeight: bellIcon.implicitHeight + Style.marginS
+              clip: true
+
+              Behavior on Layout.preferredWidth {
+                NumberAnimation { duration: 150; easing.type: Easing.InOutQuad }
+              }
+
+              NIcon {
+                id: bellIcon
+                anchors.centerIn: parent
+                icon: "bell-ringing"
+                pointSize: Style.fontSizeXL
+                color: bellMouseArea.containsMouse ? Qt.lighter(Color.mError, 1.2) : Color.mError
+                opacity: soundPlaying ? 1 : 0
+
+                Behavior on opacity {
+                  NumberAnimation { duration: 150 }
+                }
+              }
+
+              MouseArea {
+                id: bellMouseArea
+                anchors.fill: parent
+                hoverEnabled: true
+                enabled: soundPlaying
+                cursorShape: Qt.PointingHandCursor
+                onClicked: stopAlarm()
+              }
             }
             
             NText {

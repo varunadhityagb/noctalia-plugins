@@ -3,7 +3,10 @@
   "name": "Unicode Picker",
   "version": "1.0.0",
   "description": "Browse and search Unicode characters from the launcher",
-  "tags": ["Launcher", "Utilities"],
+  "tags": [
+    "Launcher",
+    "Utility"
+  ],
   "minNoctaliaVersion": "3.9.0",
   "author": "Daddeffe",
   "license": "MIT",
