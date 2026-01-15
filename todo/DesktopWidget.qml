@@ -223,9 +223,9 @@ DraggableDesktopWidget {
         Flickable {
           id: todoFlickable
           anchors.fill: parent
-          topMargin: scaledMarginL
-          bottomMargin: scaledMarginL
-          leftMargin: scaledMarginS
+          topMargin: scaledMarginM
+          bottomMargin: scaledMarginM
+          leftMargin: scaledMarginM
           rightMargin: scaledMarginM
           contentWidth: width - (leftMargin + rightMargin)  // Account for margins in content width
           contentHeight: columnLayout.implicitHeight
@@ -252,7 +252,7 @@ DraggableDesktopWidget {
                   anchors.fill: parent
                   anchors.margins: 0
                   color: model.completed ? root.completedItemBg : root.itemBg
-                  radius: scaledRadiusS
+                  radius: Style.iRadiusS * widgetScale
 
                   Item {
                     anchors.fill: parent

@@ -878,7 +878,7 @@ Item {
           createdAt: new Date().toISOString()
         };
 
-        todos.push(newTodo);
+        todos.unshift(newTodo);
 
         pluginApi.pluginSettings.todos = todos;
 
