@@ -91,87 +91,64 @@ Item {
           }
 
           Flickable {
+            id: peerFlickable
             Layout.fillWidth: true
             Layout.fillHeight: true
             clip: true
-            contentWidth: peerListColumn.width
+            contentWidth: width
             contentHeight: peerListColumn.height
 
             ColumnLayout {
               id: peerListColumn
-              width: parent.width
+              width: peerFlickable.width
               spacing: Style.marginS
 
               Repeater {
                 model: mainInstance?.peerList || []
 
                 delegate: Rectangle {
-                  Layout.fillWidth: true
-                  Layout.preferredHeight: peerColumn.implicitHeight
+                  width: peerFlickable.width
+                  height: 40
                   color: mouseArea.containsMouse ? Qt.alpha(Color.mPrimary, 0.1) : "transparent"
                   radius: Style.radiusM
 
-                  ColumnLayout {
-                    id: peerColumn
+                  RowLayout {
+                    id: peerRow
                     anchors {
-                      fill: parent
-                      margins: Style.marginS
+                      left: parent.left
+                      right: parent.right
+                      verticalCenter: parent.verticalCenter
+                      leftMargin: Style.marginM
+                      rightMargin: Style.marginM
                     }
-                    spacing: 0
+                    spacing: Style.marginM
 
-                    RowLayout {
-                      Layout.fillWidth: true
-                      Layout.preferredHeight: hostnameText.implicitHeight
-                      spacing: Style.marginS
-
-                      NIcon {
-                        icon: "laptop"
-                        pointSize: Style.fontSizeS
-                        color: {
-                          if (modelData.Online) return Color.mPrimary
-                          return Color.mOnSurfaceVariant
-                        }
-                      }
-
-                      NText {
-                        id: hostnameText
-                        text: modelData.HostName || modelData.DNSName || "Unknown"
-                        pointSize: Style.fontSizeM
-                        color: Color.mOnSurface
-                        font.weight: Style.fontWeightMedium
-                        Layout.fillWidth: true
-                        elide: Text.ElideRight
-                      }
-
-                      NText {
-                        text: modelData.Online ? (pluginApi?.tr("panel.online") || "Online") : (pluginApi?.tr("panel.offline") || "Offline")
-                        pointSize: Style.fontSizeXS
-                        color: {
-                          if (modelData.Online) return Color.mPrimary
-                          return Color.mOnSurfaceVariant
-                        }
-                      }
+                    NIcon {
+                      icon: modelData.Online ? "circle-check" : "circle-x"
+                      pointSize: Style.fontSizeM
+                      color: modelData.Online ? Color.mPrimary : Color.mOnSurfaceVariant
                     }
 
                     NText {
+                      text: modelData.HostName || modelData.DNSName || "Unknown"
+                      color: Color.mOnSurface
+                      font.weight: Style.fontWeightMedium
+                      elide: Text.ElideRight
                       Layout.fillWidth: true
-                      Layout.preferredHeight: visible ? implicitHeight : 0
+                    }
+
+                    NText {
                       text: {
                         var ips = []
                         if (modelData.TailscaleIPs && modelData.TailscaleIPs.length > 0) {
                           ips = modelData.TailscaleIPs.filter(ip => ip.startsWith("100."))
                         }
-                        return ips.join(", ")
+                        return ips.length > 0 ? ips[0] : ""
                       }
-                      visible: {
-                        if (!modelData.TailscaleIPs || modelData.TailscaleIPs.length === 0) return false
-                        var ipv4s = modelData.TailscaleIPs.filter(ip => ip.startsWith("100."))
-                        return ipv4s.length > 0
-                      }
-                      pointSize: Style.fontSizeXS
+                      pointSize: Style.fontSizeS
                       color: Color.mOnSurfaceVariant
                       font.family: Settings.data.ui.fontFixed
-                      elide: Text.ElideRight
+                      visible: modelData.TailscaleIPs && modelData.TailscaleIPs.length > 0
                     }
                   }
 
