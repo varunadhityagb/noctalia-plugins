@@ -91,7 +91,9 @@ Rectangle {
 
     onClicked: (mouse) => {
       if (mouse.button === Qt.LeftButton) {
-        BarService.openPluginPanel(screen, pluginApi.manifest)
+        if (pluginApi) {
+          pluginApi.openPanel(root.screen, root)
+        }
       } else if (mouse.button === Qt.RightButton) {
         if (mainInstance?.tailscaleInstalled) {
           mainInstance.toggleTailscale()
