@@ -64,7 +64,7 @@ Rectangle {
     NIcon {
       icon: "brand-steam"
       pointSize: Style.fontSizeL
-      color: steamRunning ? Color.mPrimary : (mouseArea.containsMouse ? Color.mOnHover : Color.mOnSurface)
+      color: mouseArea.containsMouse ? Color.mOnHover : Color.mOnSurface
     }
   }
 
