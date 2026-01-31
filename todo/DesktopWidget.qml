@@ -10,8 +10,10 @@ DraggableDesktopWidget {
   showBackground: (pluginApi && pluginApi.pluginSettings ? (pluginApi.pluginSettings.showBackground !== undefined ? pluginApi.pluginSettings.showBackground : pluginApi?.manifest?.metadata?.defaultSettings?.showBackground) : pluginApi?.manifest?.metadata?.defaultSettings?.showBackground)
 
   property var pluginApi: null
-  property bool expanded: pluginApi?.pluginSettings?.isExpanded !== undefined ? pluginApi.pluginSettings.isExpanded : (pluginApi?.manifest?.metadata?.defaultSettings?.isExpanded || false)
-  property bool showCompleted: pluginApi?.pluginSettings?.showCompleted !== undefined ? pluginApi.pluginSettings.showCompleted : pluginApi?.manifest?.metadata?.defaultSettings?.showCompleted
+  property bool expanded: false
+  property bool showCompleted: false
+  property var rawTodos: []
+  property int currentPageId: 0
   property ListModel filteredTodosModel: ListModel {}
   readonly property color todoBg: showBackground ? Qt.rgba(0, 0, 0, 0.2) : "transparent"
   readonly property color itemBg: showBackground ? Color.mSurface : "transparent"
@@ -42,28 +44,56 @@ DraggableDesktopWidget {
     return Math.min(totalHeight, headerHeight + tabBarHeight + Math.round(400 * widgetScale));
   }
 
-  Timer {
-    id: updateTimer
-    interval: 200
-    running: !!pluginApi
-    repeat: true
-    onTriggered: {
-      updateFilteredTodos();
+  // Define a function to schedule reloading of todos
+  function scheduleReload() {
+    Qt.callLater(loadTodos);
+  }
+
+  // Bind rawTodos, showCompleted, and currentPageId to plugin settings
+  Binding {
+    target: root
+    property: "rawTodos"
+    value: pluginApi?.pluginSettings?.todos || []
+  }
+
+  Binding {
+    target: root
+    property: "showCompleted"
+    value: pluginApi?.pluginSettings?.showCompleted !== undefined
+         ? pluginApi.pluginSettings.showCompleted
+         : pluginApi?.manifest?.metadata?.defaultSettings?.showCompleted || false
+  }
+
+  Binding {
+    target: root
+    property: "currentPageId"
+    value: pluginApi?.pluginSettings?.current_page_id || 0
+  }
+
+  Binding {
+    target: root
+    property: "expanded"
+    value: pluginApi?.pluginSettings?.isExpanded !== undefined
+         ? pluginApi.pluginSettings.isExpanded
+         : pluginApi?.manifest?.metadata?.defaultSettings?.isExpanded || false
+  }
+
+  Component.onCompleted: {
+    if (pluginApi) {
+      Logger.i("Todo", "DesktopWidgets initialized");
     }
   }
 
   onPluginApiChanged: {
     if (pluginApi) {
-      root.showCompleted = getCurrentShowCompleted();
-      updateFilteredTodos();
+      loadTodos();
     }
   }
 
-  Component.onCompleted: {
-    if (pluginApi) {
-      updateFilteredTodos();
-    }
-  }
+  // Listen for changes that affect the todo list display
+  onRawTodosChanged: scheduleReload()
+  onCurrentPageIdChanged: scheduleReload()
+  onShowCompletedChanged: scheduleReload()
 
   ColumnLayout {
     anchors.fill: parent
@@ -188,7 +218,6 @@ DraggableDesktopWidget {
           onClicked: {
             pluginApi.pluginSettings.current_page_id = modelData.id;
             pluginApi.saveSettings();
-            updateFilteredTodos();
           }
         }
       }
@@ -406,7 +435,6 @@ DraggableDesktopWidget {
       moveTodoToCorrectPosition(todoId);
 
       pluginApi.saveSettings();
-      updateFilteredTodos(); // Reload the UI
       return true;
     } else {
       Logger.e("Todo", "Failed to toggle todo with ID " + todoId);
@@ -546,22 +574,15 @@ DraggableDesktopWidget {
     }
   }
 
-  function getCurrentTodos() {
-    return pluginApi?.pluginSettings?.todos || [];
-  }
 
-  function getCurrentShowCompleted() {
-    return pluginApi?.pluginSettings?.showCompleted !== undefined ? pluginApi.pluginSettings.showCompleted : pluginApi?.manifest?.metadata?.defaultSettings?.showCompleted || false;
-  }
-
-  function updateFilteredTodos() {
+  function loadTodos() {
     if (!pluginApi) return;
 
     filteredTodosModel.clear();
 
-    var pluginTodos = getCurrentTodos();
-    var currentShowCompleted = getCurrentShowCompleted();
-    var currentPageId = pluginApi?.pluginSettings?.current_page_id || 0;
+    var pluginTodos = root.rawTodos;
+    var currentShowCompleted = root.showCompleted;
+    var currentPageId = root.currentPageId;
 
     // Process todos in a single pass
     for (var i = 0; i < pluginTodos.length; i++) {

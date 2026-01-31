@@ -18,65 +18,51 @@ Item {
   property ListModel filteredTodosModel: ListModel {}
   property bool showCompleted: false
   property var rawTodos: []
+  property int currentPageId: 0
   property bool showEmptyState: false
 
-  // Timer to delay the empty state check
-  Timer {
-    id: emptyStateTimer
-    interval: 100
-    onTriggered: {
-      root.showEmptyState = (root.filteredTodosModel.count === 0);
-    }
+  // Define a function to schedule reloading of todos
+  function scheduleReload() {
+    Qt.callLater(loadTodos);
   }
 
+  // Bind rawTodos, showCompleted, and currentPageId to plugin settings
   Binding {
     target: root
     property: "rawTodos"
     value: pluginApi?.pluginSettings?.todos || []
   }
 
+  Binding {
+    target: root
+    property: "showCompleted"
+    value: pluginApi?.pluginSettings?.showCompleted !== undefined
+         ? pluginApi.pluginSettings.showCompleted
+         : pluginApi?.manifest?.metadata?.defaultSettings?.showCompleted || false
+  }
+
+  Binding {
+    target: root
+    property: "currentPageId"
+    value: pluginApi?.pluginSettings?.current_page_id || 0
+  }
+
   Component.onCompleted: {
     if (pluginApi) {
       Logger.i("Todo", "Panel initialized");
-      root.showCompleted = pluginApi?.pluginSettings?.showCompleted !== undefined
-                           ? pluginApi.pluginSettings.showCompleted
-                           : pluginApi?.manifest?.metadata?.defaultSettings?.showCompleted || false;
-      // Reset the flag before loading
-      root.showEmptyState = false;
-      loadTodos();
     }
   }
 
   onPluginApiChanged: {
     if (pluginApi) {
-      // Reset the flag when plugin API changes
-      root.showEmptyState = false;
       loadTodos();
     }
   }
 
-  // Watch for changes in the todos array length or showCompleted setting
-  property int previousTodosCount: -1
-
-  Timer {
-    id: settingsWatcher
-    interval: 100
-    running: !!pluginApi
-    repeat: true
-    onTriggered: {
-    var newShowCompleted = pluginApi?.pluginSettings?.showCompleted !== undefined
-                           ? pluginApi.pluginSettings.showCompleted
-                           : pluginApi?.manifest?.metadata?.defaultSettings?.showCompleted || false;
-      var currentTodos = pluginApi?.pluginSettings?.todos || [];
-      var currentTodosCount = currentTodos.length;
-
-      if (root.showCompleted !== newShowCompleted || root.previousTodosCount !== currentTodosCount) {
-        root.showCompleted = newShowCompleted;
-        root.previousTodosCount = currentTodosCount;
-        loadTodos();
-      }
-    }
-  }
+  // Listen for changes that affect the todo list display
+  onRawTodosChanged: scheduleReload()
+  onCurrentPageIdChanged: scheduleReload()
+  onShowCompletedChanged: scheduleReload()
 
   Rectangle {
     id: panelContainer
@@ -171,7 +157,6 @@ Item {
                 onClicked: {
                   pluginApi.pluginSettings.current_page_id = modelData.id;
                   pluginApi.saveSettings();
-                  loadTodos();
                 }
               }
             }
@@ -332,8 +317,6 @@ Item {
 
                     pluginApi.pluginSettings.todos = pluginApi.pluginSettings.todos;
                     pluginApi.saveSettings();
-
-                    root.loadTodos();
                   }
                   editing = false;
                 }
@@ -938,7 +921,6 @@ Item {
         pluginApi.saveSettings();
 
         newTodoInput.text = "";
-        loadTodos(); // Load the updated list
       }
     }
   }
@@ -1036,7 +1018,6 @@ Item {
     if (pluginApi) {
       pluginApi.pluginSettings.todos = newTodos;
       pluginApi.saveSettings();
-      loadTodos();
     }
   }
 
@@ -1095,7 +1076,6 @@ Item {
       pluginApi.pluginSettings.completedCount = completedCount;
 
       pluginApi.saveSettings();
-      loadTodos(); // Reload the UI
 
       return true;
     } else {
@@ -1125,7 +1105,6 @@ Item {
       moveTodoToCorrectPosition(todoId);
 
       pluginApi.saveSettings();
-      loadTodos(); // Reload the UI
       return true;
     } else {
       Logger.e("Todo", "Failed to toggle todo with ID " + todoId);
@@ -1161,7 +1140,6 @@ Item {
     pluginApi.pluginSettings.count = activeTodos.length;
 
     pluginApi.saveSettings();
-    loadTodos();
     return true;
   }
 
@@ -1327,16 +1305,14 @@ Item {
     // Store the current scroll position
     var currentScrollPos = todoListView ? todoListView.contentY : 0;
 
+    // Clear models
     todosModel.clear();
     filteredTodosModel.clear();
 
     var pluginTodos = root.rawTodos;
-    var currentPageId = pluginApi?.pluginSettings?.current_page_id || 0;
+    var currentPageId = root.currentPageId;
 
-    // Process todos in a single pass
-    var pageTodos = [];
-    var filteredPageTodos = [];
-
+    // Process todos in a single pass and populate models directly
     for (var i = 0; i < pluginTodos.length; i++) {
       var todo = pluginTodos[i];
       if (todo.pageId === currentPageId) {
@@ -1349,21 +1325,14 @@ Item {
           priority: todo.priority || "medium"
         };
 
-        pageTodos.push(todoItem);
+        // Add to main model
+        todosModel.append(todoItem);
 
-        if (showCompleted || !todo.completed) {
-          filteredPageTodos.push(todoItem);
+        // Add to filtered model if applicable
+        if (root.showCompleted || !todo.completed) {
+          filteredTodosModel.append(todoItem);
         }
       }
-    }
-
-    // Populate models
-    for (var j = 0; j < pageTodos.length; j++) {
-      todosModel.append(pageTodos[j]);
-    }
-
-    for (var k = 0; k < filteredPageTodos.length; k++) {
-      filteredTodosModel.append(filteredPageTodos[k]);
     }
 
     // Restore the scroll position
@@ -1373,8 +1342,8 @@ Item {
       });
     }
 
-    // Start the timer to delay checking if the model is empty
-    emptyStateTimer.start();
+    // Check if the model is empty
+    root.showEmptyState = (filteredTodosModel.count === 0);
   }
 
   // Dialog for displaying todo details
