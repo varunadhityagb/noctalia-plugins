@@ -61,7 +61,7 @@ Item {
                 spacing: Style.marginM
 
                 NText {
-                    text: "Configure mpvpaper"
+                    text: pluginApi?.tr("panel.title") || "Configure mpvpaper"
                     pointSize: Style.fontSizeXL
                     font.weight: Font.Bold
                     Layout.fillWidth: true
@@ -82,29 +82,29 @@ Item {
                 spacing: Style.marginM
 
                 NButton {
-                    text: "Folder"
-                    tooltipText: "Choose another folder that contains your wallpapers."
+                    text: pluginApi?.tr("panel.buttons.folder.text") || "Folder"
+                    tooltipText: pluginApi?.tr("panel.buttons.folder.tooltip") || "Choose another folder that contains your wallpapers."
 
                     onClicked: wallpapersFolderPicker.openFilePicker();
                 }
 
                 NButton {
-                    text: "Refresh"
-                    tooltipText: "Refresh thumbnails, remove old ones and create new ones."
+                    text: pluginApi?.tr("panel.buttons.refresh.text") || "Refresh"
+                    tooltipText: pluginApi?.tr("panel.buttons.refresh.tooltip") || "Refresh thumbnails, remove old ones and create new ones."
 
                     onClicked: pluginApi?.mainInstance.thumbRegenerate();
                 }
 
                 NButton {
-                    text: "Random"
-                    tooltipText: "Choose a random image from this folder."
+                    text: pluginApi?.tr("panel.buttons.random.text") || "Random"
+                    tooltipText: pluginApi?.tr("panel.buttons.random.tooltip") || "Choose a random image from this folder."
 
                     onClicked: pluginApi?.mainInstance.random();
                 }
 
                 NButton {
-                    text: "Clear"
-                    tooltipText: "Clear the current wallpaper image."
+                    text: pluginApi?.tr("panel.buttons.clear.text") || "Clear"
+                    tooltipText: pluginApi?.tr("panel.buttons.clear.tooltip") || "Clear the current wallpaper image."
 
                     onClicked: pluginApi?.mainInstance.clear();
                 }
@@ -123,7 +123,7 @@ Item {
                     visible: !root.thumbCacheReady
 
                     NText {
-                        text: "Loading..."
+                        text: pluginApi?.tr("panel.loading") || "Loading..."
                         Layout.alignment: Qt.AlignHCenter | Qt.AlignVCenter
                         pointSize: Style.fontSizeL
                         font.weight: Font.Bold
