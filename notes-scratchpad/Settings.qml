@@ -77,7 +77,7 @@ ColumnLayout {
     NText {
       text: pluginApi?.tr("settings.text_appearance.title") || "Text Appearance"
       pointSize: Style.fontSizeL
-      font.weight: Font.Bold
+      font.weight: Font.DemiBold
     }
 
     NText {
