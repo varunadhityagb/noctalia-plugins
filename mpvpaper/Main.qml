@@ -108,13 +108,6 @@ Item {
         return `file://${getThumbPath(videoPath)}`;
     }
 
-    onWallpapersFolderChanged: {
-        // Reset variables
-        root._thumbGenIndex = 0;
-        
-        root.thumbRegenerate();
-    }
-
     onCurrentWallpaperChanged: {
         if (!root.active)
             return;
@@ -133,6 +126,8 @@ Item {
                 mpvProc.command = ["sh", "-c", `mpvpaper -o "input-ipc-server=${root.mpvSocket} loop no-audio" ALL ${root.currentWallpaper}` ]
                 mpvProc.running = true;
             }
+
+            thumbColorGenTimer.start();
         } else if(mpvProc.running) {
             Logger.d("mpvpaper", "Current wallpaper is empty, turning mpvpaper off.");
 
@@ -159,6 +154,15 @@ Item {
         folder: "file://" + root.wallpapersFolder
         nameFilters: ["*.mp4", "*.avi", "*.mov"]
         showDirs: false
+
+        onStatusChanged: {
+            root._thumbGenIndex = 0;
+            root.thumbCacheReady = false;
+            if (folderModel.status == FolderListModel.Ready) {
+                // Generate all the thumbnails for the folder
+                root.thumbGeneration();
+            }
+        }
     }
 
     Process {
@@ -175,6 +179,39 @@ Item {
         folder: "file://" + root.thumbCacheFolder
         nameFilters: ["*.bmp"]
         showDirs: false
+    }
+
+    Timer {
+        id: thumbColorGenTimer
+        interval: 50
+        repeat: false
+        running: false
+        triggeredOnStart: false
+
+        onTriggered: {
+            if(thumbFolderModel.status == FolderListModel.Ready) {
+                pluginApi.withCurrentScreen(screen => {
+                    const thumbPath = root.getThumbPath(root.currentWallpaper);
+                    if(thumbFolderModel.indexOf("file://" + thumbPath) !== -1) {
+                        Logger.d("mpvpaper", "Generating color scheme based on video wallpaper!");
+                        WallpaperService.changeWallpaper(thumbPath);
+                    } else {
+                        // Try to create the thumbnail again
+                        // just a fail safe if the current wallpaper isn't included in the wallpapers folder
+                        Logger.d("mpvpaper", "Thumbnail not found:", thumbPath);
+                        thumbColorGenTimerProc.command = ["sh", "-c", `ffmpeg -y -i ${videoUrl} -vf "scale=1080:-1" -vframes:v 1 ${thumbUrl}`]
+                        thumbColorGenTimerProc.running = true;
+                    }
+                });
+            } else {
+                thumbColorGenTimer.restart();
+            }
+        }
+    }
+
+    Process {
+        id: thumbColorGenTimerProc
+        onExited: thumbColorGenTimer.start();
     }
 
     Process {
