@@ -13,6 +13,14 @@ A launcher provider plugin that lets you search your Calibre library by title or
 
 Alternatively, you can trigger the provider by IPC with the command `qs -c noctalia-shell ipc call plugin:calibre-provider toggle`.
 
+## Settings
+
+### Launcher
+If you don't have `xdg-open` installed, or prefer to use a different file opener, you can configure this using the Launcher setting.
+
+### Force Grid mode
+Enable this to force the launcher into grid view when searching Calibre. This gives the cover images more space, but shows less metadata. If this option is disabled, your configured launcher view will be used.
+
 ## Requirements
 
 - Noctalia 4.3.0 or later

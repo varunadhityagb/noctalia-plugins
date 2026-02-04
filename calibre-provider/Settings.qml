@@ -12,6 +12,7 @@ ColumnLayout {
 
   // Local state for editing
   property string editLauncher: pluginApi?.pluginSettings?.launcher || "xdg-open"
+  property bool editForceGrid: !!(pluginApi?.pluginSettings?.forceGrid)
 
   spacing: Style.marginM
 
@@ -28,12 +29,21 @@ ColumnLayout {
           text: root.editLauncher
           onTextChanged: root.editLauncher = text
       }
+
+      NCheckbox {
+        Layout.fillWidth: true
+        label: pluginApi?.tr("settings.forcegrid.label") || "Force grid view"
+        description: pluginApi?.tr("settings.forcegrid.description") || "Always use grid view to display results. If disabled, use current launcher configuration"
+        checked: root.editForceGrid
+        onToggled: (checked) => root.editForceGrid = checked
+      }
   }
 
 
   // Required: Save function called by the dialog
   function saveSettings() {
     pluginApi.pluginSettings.launcher = root.editLauncher;
+    pluginApi.pluginSettings.forceGrid = root.editForceGrid;
     pluginApi.saveSettings();
   }
 }

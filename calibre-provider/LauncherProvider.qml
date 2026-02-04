@@ -26,7 +26,6 @@ Item {
     property bool loaded: false
     property bool loading: false
 
-    // TODO: Write a custom one instead
     Process {
         id: calibreDbLoader
         command: ["python3", "placeholder"]
@@ -113,6 +112,14 @@ Item {
         loading = false;
     }
 
+    function onOpened() {
+        if( pluginApi?.pluginSettings?.forceGrid ) {
+            supportedLayouts = "grid";
+        } else {
+            supportedLayouts = "both";
+        }
+    }
+
     function handleCommand(searchText) {
         return searchText.startsWith(">cb ");
     }
@@ -131,9 +138,33 @@ Item {
         }];
     }
 
-
     // Get search results
     function getResults(searchText) {
+
+        if (loading) {
+          return [{
+            "name": "Loading...",
+            "description": "Loading calibre database...",
+            "icon": "refresh",
+            "isTablerIcon": true,
+            "isImage": false,
+            "onActivate": function() {}
+          }];
+        }
+
+        if (!loaded) {
+          return [{
+            "name": "Database not loaded",
+            "description": "Check your log for error messages",
+            "icon": "alert-circle",
+            "isTablerIcon": true,
+            "isImage": false,
+            "onActivate": function() {
+              root.init();
+            }
+          }];
+        }
+
         if (!searchText.startsWith(">cb")) {
             return [];
         }
