@@ -2,6 +2,21 @@
   "version": 1,
   "plugins": [
     {
+      "id": "activate-linux",
+      "name": "Activate Linux Watermark",
+      "version": "1.1.0",
+      "official": false,
+      "author": "Preston Corless (pgattic)",
+      "description": "Adds a watermark to the bottom-right of the screen similar to the one found on unactivated Windows 10/11",
+      "repository": "https://github.com/noctalia-dev/noctalia-plugins",
+      "license": "MIT",
+      "tags": [
+        "Desktop",
+        "Fun"
+      ],
+      "lastUpdated": "2026-02-04T23:08:01-07:00"
+    },
+    {
       "id": "assistant-panel",
       "name": "Assistant Panel",
       "version": "2.0.2",
@@ -217,14 +232,14 @@
     {
       "id": "keybind-cheatsheet",
       "name": "Keybind Cheatsheet",
-      "version": "3.0.0",
+      "version": "3.1.1",
       "official": false,
       "author": "blacku",
       "description": "Universal keyboard shortcuts keymap that automatically detects and displays keybindings for Hyprland or Niri compositors.",
       "minNoctaliaVersion": "3.6.0",
       "license": "MIT",
       "tags": [],
-      "lastUpdated": "2026-01-29T00:09:04+01:00"
+      "lastUpdated": "2026-02-03T22:32:34+01:00"
     },
     {
       "id": "mangowc-layout-switcher",
